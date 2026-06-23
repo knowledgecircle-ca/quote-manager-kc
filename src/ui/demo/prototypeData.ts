@@ -983,7 +983,7 @@ export const templateSections: TemplateCardData[] = [
     reviewState: "Template applied",
     source: "Standard Knowledge Circle document footer",
     appliesWhen: "Every proposal PDF page",
-    content: "Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada. Include page number and total page count on every page.",
+    content: "Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada. Page number and total page count are reserved for the final dedicated PDF generator.",
   },
 ];
 

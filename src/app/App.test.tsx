@@ -172,7 +172,8 @@ describe("App Phase 2A prototype", () => {
     expect(
       within(dialog).getByText("Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada"),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText("Page")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("Total")).toHaveLength(2);
+    expect(within(dialog).queryByText("Estimated subtotal")).not.toBeInTheDocument();
   });
 
   it("shows four proposal steps with aria-current on the active step", () => {
@@ -606,7 +607,7 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
     expect(within(dialog).getByText("CAD 50.00 / Per hour")).toBeInTheDocument();
-    expect(within(dialog).getByText("CAD 1800.00")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("CAD 1800.00")).toHaveLength(2);
   });
 
   it("locks rate overrides when a service uses SOA pricing", () => {
@@ -946,7 +947,7 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByDisplayValue(/Tuesday and Thursday mornings/i)).toBeInTheDocument();
     expect(screen.getByText("PDF footer")).toBeInTheDocument();
     expect(screen.getByDisplayValue(/Knowledge Circle Language Services Inc. ©2026 1 Rideau Street/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue(/page number and total page count/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/reserved for the final dedicated PDF generator/i)).toBeInTheDocument();
     expect(screen.getByText("Template rules")).toBeInTheDocument();
     expect(screen.queryByText("Editable content")).not.toBeInTheDocument();
   });

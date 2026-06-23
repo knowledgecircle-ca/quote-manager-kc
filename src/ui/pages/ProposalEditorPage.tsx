@@ -197,8 +197,8 @@ const defaultProposalBasics: ProposalBasicsDraft = {
   proposalTitle: "Second language training proposal",
   quoteDate: "2026-06-22",
 };
-const proposalFooterText =
-  "Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada";
+const proposalFooterCompany = "Knowledge Circle Language Services Inc.";
+const proposalFooterAddress = "1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada";
 
 function serviceCardId(serviceId: string) {
   return `service-card-${serviceId}`;
@@ -3036,6 +3036,9 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
           </div>
         </div>
         <div className="letter-page" aria-label="Letter-size proposal preview">
+          <div className="letter-print-continuation-header" aria-hidden="true">
+            Knowledge Circle Language Services Inc. - Proposal
+          </div>
           <header className="letter-header">
             <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
             <span className="letter-quote-id">Second language training proposal (Ref: {quoteId})</span>
@@ -3103,7 +3106,10 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
                 )}
               </tbody>
             </table>
-            <p className="letter-total">Estimated subtotal: {proposalPreviewSubtotal(requestedServices)}</p>
+            <div className="letter-total">
+              <span>Total</span>
+              <strong>{proposalPreviewSubtotal(requestedServices)}</strong>
+            </div>
           </section>
           <section className="letter-section">
             <h3>Administrative Conditions</h3>
@@ -3163,8 +3169,8 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
             <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
           </section>
           <footer className="letter-footer" aria-label="Proposal footer">
-            <span>{proposalFooterText}</span>
-            <span className="letter-footer-page">Page</span>
+            <span>{proposalFooterCompany} &copy;2026 {proposalFooterAddress}</span>
+            <span className="letter-footer-page">Page number added by final PDF generator</span>
           </footer>
         </div>
         <div className="button-row dialog-actions">
