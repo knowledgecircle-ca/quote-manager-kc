@@ -3,6 +3,7 @@ import { SectionCard } from "@/ui/components/SectionCard";
 
 const coreScenarios = [
   "Create a blank proposal and confirm that no service is preselected.",
+  "Enter a Quote ID from Kevin's external register before generating the PDF.",
   "Add individual second-language training for one learner, then change it to multiple learners with the same conditions.",
   "Add group second-language training with multiple groups, a session, teaching weeks, buffer weeks, frequency, and class duration.",
   "Create a mixed proposal with training plus diagnostic assessment.",
@@ -13,6 +14,7 @@ const coreScenarios = [
 ];
 
 const reviewChecklist = [
+  "Does the Quote ID match Kevin's external quote register and has it never been reused?",
   "Are the training descriptions clear enough for a client to understand what they are buying?",
   "Do group and individual training summaries use the right terminology?",
   "Are quantities, rates, and totals easy to verify?",
@@ -67,12 +69,22 @@ export function HelpPage() {
         <SectionCard title="Quick Start" description="A short path through the app for the first test pass.">
           <ol className="help-list">
             <li>Open Proposals and select New proposal.</li>
-            <li>Complete Basics with the organization, contact, proposal title, and quote date.</li>
+            <li>Complete Basics with the Quote ID, organization, contact, proposal title, and quote date.</li>
             <li>Add one or more services in Training.</li>
             <li>Review automatic rates and totals in Pricing.</li>
             <li>Review the Proposal document step and open Preview.</li>
             <li>Use Download PDF and choose Save as PDF in the browser print dialog.</li>
           </ol>
+        </SectionCard>
+
+        <SectionCard title="Quote ID Rules" description="Until the app runs on the company server, Kevin's external register is the source of truth.">
+          <ul className="help-list">
+            <li>Choose the next Quote ID from the external quote register before generating a PDF.</li>
+            <li>Enter that exact Quote ID in Basics. Working format: KC-YYYY-MMDD-XX, for example KC-2026-0623-01.</li>
+            <li>Do not reuse a Quote ID, even if a draft is cancelled or revised.</li>
+            <li>The Quote ID appears in the PDF as the reference, but it does not replace the proposal title.</li>
+            <li>The app blocks PDF generation when the Quote ID is missing or does not match the required format.</li>
+          </ul>
         </SectionCard>
 
         <SectionCard title="Recommended Scenarios" description="These scenarios cover the main business shapes we have discussed.">

@@ -122,6 +122,7 @@ interface ClientDraft {
 interface ProposalBasicsDraft {
   proposalTitle: string;
   quoteDate: string;
+  quoteId: string;
 }
 
 const competencyOptions = ["Reading", "Writing", "Oral"] as const;
@@ -196,9 +197,15 @@ const initialRequestedServices: RequestedService[] = [];
 const defaultProposalBasics: ProposalBasicsDraft = {
   proposalTitle: "Second language training proposal",
   quoteDate: "2026-06-22",
+  quoteId: "",
 };
 const proposalFooterCompany = "Knowledge Circle Language Services Inc.";
 const proposalFooterAddress = "1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada";
+const quoteIdPattern = /^KC-\d{4}-\d{4}-\d{2}$/;
+
+function isQuoteIdValid(quoteId: string) {
+  return quoteIdPattern.test(quoteId.trim());
+}
 
 function serviceCardId(serviceId: string) {
   return `service-card-${serviceId}`;
@@ -877,6 +884,12 @@ function parseCadMinorUnits(rate: string) {
 
 function formatCadMinorUnits(minorUnits: number) {
   return `CAD ${(minorUnits / 100).toFixed(2)}`;
+}
+
+function formatCadMinorUnitsForProposal(minorUnits: number) {
+  const [dollars, cents] = (minorUnits / 100).toFixed(2).split(".");
+  const groupedDollars = dollars.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `CAD ${groupedDollars}.${cents}`;
 }
 
 function parseEditableRateMinorUnits(rate: string) {
@@ -1607,7 +1620,10 @@ export function ProposalEditorPage({
     [proposalId],
   );
 
-  const quoteId = mode === "new" ? "New draft" : proposal.id;
+  const manualQuoteId = proposalBasics.quoteId.trim();
+  const hasValidQuoteId = isQuoteIdValid(manualQuoteId);
+  const quoteId = mode === "new" ? manualQuoteId || "Quote ID required" : proposal.id;
+  const canGeneratePdf = mode === "edit" || hasValidQuoteId;
   const proposalTitle = mode === "new" ? proposalBasics.proposalTitle : proposal.title;
   const activeStepIndex = editorSteps.findIndex((step) => step.id === activeStepId);
   const nextStep = editorSteps[Math.min(activeStepIndex + 1, editorSteps.length - 1)];
@@ -1677,8 +1693,8 @@ function addRequestedService() {
           </div>
           <div className="editor-header-actions">
             <LocalDataBanner variant="compact" />
-            <span className="save-indicator" title="Prototype autosave indicator. No persistence is implemented yet.">
-              Saved 10:42
+            <span className="save-indicator" title="Prototype draft state. Use the external quote register until server persistence exists.">
+              Local draft
             </span>
             <button className="button-secondary" onClick={() => setIsPreviewOpen(true)} type="button">
               Preview
@@ -1775,6 +1791,7 @@ function addRequestedService() {
           proposalLanguage={proposalLanguage}
           quoteDate={proposalBasics.quoteDate}
           quoteId={quoteId}
+          canGeneratePdf={canGeneratePdf}
           requestedServices={requestedServices}
           summary={liveQuoteSummary}
           title={proposalTitle}
@@ -1810,6 +1827,20 @@ function BasicsStep({
                 value={proposalBasics.quoteDate}
               />
             </label>
+            <div className="field-stack">
+              <label htmlFor="quote-id">Quote ID required</label>
+              <input
+                aria-describedby="quote-id-help"
+                aria-invalid={proposalBasics.quoteId.length > 0 && !isQuoteIdValid(proposalBasics.quoteId)}
+                id="quote-id"
+                onChange={(event) => onProposalBasicsChange({ quoteId: event.target.value })}
+                placeholder="Example: KC-2026-0623-01"
+                value={proposalBasics.quoteId}
+              />
+              <span className="field-help" id="quote-id-help">
+                Use Kevin's external quote register. Format: KC-YYYY-MMDD-XX. Do not reuse an ID.
+              </span>
+            </div>
             <label className="full-width">
               Proposal title
               <input
@@ -2958,6 +2989,7 @@ function ContentStep({
 }
 
 interface ProposalPreviewDialogProps {
+  canGeneratePdf: boolean;
   onClose: () => void;
   proposalLanguage: "English" | "Francais";
   quoteDate: string;
@@ -2970,8 +3002,9 @@ interface ProposalPreviewDialogProps {
 function proposalPreviewRows(requestedServices: RequestedService[]) {
   return requestedServices.map((service, index) => {
     const selectedPriceLine = selectedPriceLineForService(service);
+    const amountMinorUnits = estimatedAmountMinorUnits(service, selectedPriceLine);
     return {
-      amount: estimatedAmount(service, selectedPriceLine),
+      amount: amountMinorUnits === null ? "Rate to confirm" : formatCadMinorUnitsForProposal(amountMinorUnits),
       configuration: proposalTrainingDetailText(service, selectedPriceLine),
       description: quotationDescriptionText(service, selectedPriceLine),
       id: service.id,
@@ -2982,6 +3015,16 @@ function proposalPreviewRows(requestedServices: RequestedService[]) {
       unit: selectedPriceLine?.unit ?? "Unit to confirm",
     };
   });
+}
+
+type ProposalPreviewRow = ReturnType<typeof proposalPreviewRows>[number];
+
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
 }
 
 function proposalPreviewSubtotal(requestedServices: RequestedService[]) {
@@ -2995,7 +3038,7 @@ function proposalPreviewSubtotal(requestedServices: RequestedService[]) {
     return estimatedAmountMinorUnits(service, selectedPriceLine) === null;
   });
 
-  return `${formatCadMinorUnits(subtotalMinorUnits)}${hasUnpricedRows ? " + rates to confirm" : ""}`;
+  return `${formatCadMinorUnitsForProposal(subtotalMinorUnits)}${hasUnpricedRows ? " + rates to confirm" : ""}`;
 }
 
 function pdfDocumentTitle(title: string, quoteId: string) {
@@ -3012,12 +3055,125 @@ function LetterFooter({ pageNumber, totalPages }: { pageNumber: number; totalPag
   );
 }
 
-function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
+function LetterContinuationHeader({ quoteId, title }: { quoteId: string; title: string }) {
+  return (
+    <header className="letter-continuation-header">
+      <strong>Knowledge Circle Language Services Inc.</strong>
+      <span>{title} (Ref: {quoteId})</span>
+    </header>
+  );
+}
+
+function LetterTrainingDetailsSection({
+  continuationNote,
+  rows,
+}: {
+  continuationNote?: string;
+  rows: ProposalPreviewRow[];
+}) {
+  return (
+    <section className="letter-section">
+      <h3>Training Details</h3>
+      {rows.length === 0 ? (
+        <p>No services have been added yet.</p>
+      ) : (
+        <ul className="letter-service-list">
+          {rows.map((row) => (
+            <li key={row.id}>
+              <strong>{row.label}: {row.serviceName}</strong>
+              <span>{row.configuration}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {continuationNote ? <p className="letter-continuation-note">{continuationNote}</p> : null}
+    </section>
+  );
+}
+
+function LetterQuotationSection({
+  rows,
+  showTotal,
+  subtotal,
+}: {
+  rows: ProposalPreviewRow[];
+  showTotal: boolean;
+  subtotal: string;
+}) {
+  return (
+    <section className="letter-section">
+      <h3>Quotation</h3>
+      <table className="letter-table">
+        <colgroup>
+          <col className="letter-col-item" />
+          <col className="letter-col-description" />
+          <col className="letter-col-rate" />
+          <col className="letter-col-quantity" />
+          <col className="letter-col-total" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th>Rate</th>
+            <th>Quantity</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={5}>No quotation lines yet.</td>
+            </tr>
+          ) : (
+            rows.map((row) => (
+              <tr key={row.id}>
+                <td>{row.serviceName}</td>
+                <td>{row.description}</td>
+                <td>{row.rate} / {row.unit}</td>
+                <td>{row.quantity}</td>
+                <td>{row.amount}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+      {showTotal ? (
+        <div className="letter-total">
+          <span>Total</span>
+          <strong>{subtotal}</strong>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
   const previewRows = proposalPreviewRows(requestedServices);
   const assetBaseUrl = import.meta.env.BASE_URL;
-  const proposalPageCount = 2;
+  const compactFirstPage = previewRows.length <= 2;
+  const firstPageRows = compactFirstPage ? previewRows : previewRows.slice(0, 4);
+  const trainingContinuationChunks = compactFirstPage ? [] : chunkArray(previewRows.slice(4), 5);
+  const quotationChunks = compactFirstPage ? [] : chunkArray(previewRows.length === 0 ? [] : previewRows, 8);
+  const subtotal = proposalPreviewSubtotal(requestedServices);
+  let nextPageNumber = 2;
+  const trainingContinuationPages = trainingContinuationChunks.map((rows) => ({
+    pageNumber: nextPageNumber++,
+    rows,
+  }));
+  const quotationPages = quotationChunks.map((rows, index) => ({
+    pageNumber: nextPageNumber++,
+    rows,
+    showTotal: index === quotationChunks.length - 1,
+  }));
+  const adminPageNumber = nextPageNumber;
+  const proposalPageCount = adminPageNumber;
 
   function handleDownloadPdf() {
+    if (!canGeneratePdf) {
+      return;
+    }
+
     printProposalDraftPdf({
       documentTitle: pdfDocumentTitle(title, quoteId),
       getDocumentTitle: () => document.title,
@@ -3037,7 +3193,7 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
             <h2 id="proposal-preview-title">Proposal Preview</h2>
           </div>
           <div className="preview-dialog-header-actions">
-            <button className="button-primary" onClick={handleDownloadPdf} type="button">
+            <button className="button-primary" disabled={!canGeneratePdf} onClick={handleDownloadPdf} type="button">
               Download PDF
             </button>
             <button aria-label="Close proposal preview" className="icon-button" onClick={onClose} title="Close preview" type="button">
@@ -3063,72 +3219,38 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
                 <h3>{title}</h3>
                 <p>{generatedOverviewText(requestedServices)}</p>
               </section>
-              <section className="letter-section">
-                <h3>Training Details</h3>
-                {previewRows.length === 0 ? (
-                  <p>No services have been added yet.</p>
-                ) : (
-                  <ul className="letter-service-list">
-                    {previewRows.map((row) => (
-                      <li key={row.id}>
-                        <strong>{row.label}: {row.serviceName}</strong>
-                        <span>{row.configuration}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-              <section className="letter-section">
-                <h3>Quotation</h3>
-                <table className="letter-table">
-                  <colgroup>
-                    <col className="letter-col-item" />
-                    <col className="letter-col-description" />
-                    <col className="letter-col-rate" />
-                    <col className="letter-col-quantity" />
-                    <col className="letter-col-total" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th>Description</th>
-                      <th>Rate</th>
-                      <th>Quantity</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewRows.length === 0 ? (
-                      <tr>
-                        <td colSpan={5}>No quotation lines yet.</td>
-                      </tr>
-                    ) : (
-                      previewRows.map((row) => (
-                        <tr key={row.id}>
-                          <td>{row.serviceName}</td>
-                          <td>{row.description}</td>
-                          <td>{row.rate} / {row.unit}</td>
-                          <td>{row.quantity}</td>
-                          <td>{row.amount}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-                <div className="letter-total">
-                  <span>Total</span>
-                  <strong>{proposalPreviewSubtotal(requestedServices)}</strong>
-                </div>
-              </section>
+              <LetterTrainingDetailsSection
+                continuationNote={trainingContinuationPages.length > 0 ? "Training details continue on the next page." : undefined}
+                rows={firstPageRows}
+              />
+              {compactFirstPage ? <LetterQuotationSection rows={previewRows} showTotal subtotal={subtotal} /> : null}
             </div>
             <LetterFooter pageNumber={1} totalPages={proposalPageCount} />
           </div>
-          <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page 2 of ${proposalPageCount}`}>
+          {trainingContinuationPages.map((page, index) => (
+            <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page ${page.pageNumber} of ${proposalPageCount}`} key={`training-${page.pageNumber}`}>
+              <div className="letter-page-content">
+                <LetterContinuationHeader quoteId={quoteId} title={title} />
+                <LetterTrainingDetailsSection
+                  continuationNote={index < trainingContinuationPages.length - 1 ? "Training details continue on the next page." : undefined}
+                  rows={page.rows}
+                />
+              </div>
+              <LetterFooter pageNumber={page.pageNumber} totalPages={proposalPageCount} />
+            </div>
+          ))}
+          {quotationPages.map((page) => (
+            <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page ${page.pageNumber} of ${proposalPageCount}`} key={`quotation-${page.pageNumber}`}>
+              <div className="letter-page-content">
+                <LetterContinuationHeader quoteId={quoteId} title={title} />
+                <LetterQuotationSection rows={page.rows} showTotal={page.showTotal} subtotal={subtotal} />
+              </div>
+              <LetterFooter pageNumber={page.pageNumber} totalPages={proposalPageCount} />
+            </div>
+          ))}
+          <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page ${adminPageNumber} of ${proposalPageCount}`}>
             <div className="letter-page-content">
-              <header className="letter-continuation-header">
-                <strong>Knowledge Circle Language Services Inc.</strong>
-                <span>{title} (Ref: {quoteId})</span>
-              </header>
+              <LetterContinuationHeader quoteId={quoteId} title={title} />
               <section className="letter-section">
                 <h3>Administrative Conditions</h3>
                 <ul className="letter-condition-list">
@@ -3187,12 +3309,16 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
                 <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
               </section>
             </div>
-            <LetterFooter pageNumber={2} totalPages={proposalPageCount} />
+            <LetterFooter pageNumber={adminPageNumber} totalPages={proposalPageCount} />
           </div>
         </div>
         <div className="button-row dialog-actions">
-          <span className="validation-note">Use Download PDF, then choose Save as PDF in the browser print dialog.</span>
-          <button className="button-secondary" onClick={handleDownloadPdf} type="button">
+          <span className="validation-note">
+            {canGeneratePdf
+              ? "Use Download PDF, then choose Save as PDF in the browser print dialog."
+              : "Enter a valid Quote ID from the external quote register before generating the PDF. Format: KC-YYYY-MMDD-XX."}
+          </span>
+          <button className="button-secondary" disabled={!canGeneratePdf} onClick={handleDownloadPdf} type="button">
             Download PDF
           </button>
           <button className="button-primary" onClick={onClose} type="button">

@@ -30,6 +30,19 @@ describe("App Phase 2A prototype", () => {
     return screen.getByRole("article", { name: "Diagnostic assessment" });
   }
 
+  function enterQuoteId(quoteId = "KC-2026-0623-01") {
+    if (!screen.queryByLabelText("Quote ID required")) {
+      const basicsButton = screen.queryByRole("button", { name: "Basics" });
+      if (basicsButton) {
+        fireEvent.click(basicsButton);
+      }
+    }
+
+    fireEvent.change(screen.getByLabelText("Quote ID required"), {
+      target: { value: quoteId },
+    });
+  }
+
   it("renders the application shell", () => {
     render(<App />);
 
@@ -78,6 +91,7 @@ describe("App Phase 2A prototype", () => {
 
     expect(screen.getByRole("heading", { name: "Help", level: 2 })).toBeInTheDocument();
     expect(screen.getByText(/Validate whether Kevin can build a clear Knowledge Circle proposal/i)).toBeInTheDocument();
+    expect(screen.getByText(/KC-YYYY-MMDD-XX/i)).toBeInTheDocument();
     expect(screen.getByText(/Add individual second-language training for one learner/i)).toBeInTheDocument();
     expect(screen.getByText(/Override a Non-SOA rate for this proposal only/i)).toBeInTheDocument();
     expect(screen.getByText(/There is no backend, authentication, email, CRM integration/i)).toBeInTheDocument();
@@ -98,8 +112,8 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
 
     expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeInTheDocument();
-    expect(screen.getByText("New draft")).toBeInTheDocument();
-    expect(screen.getByText("Saved 10:42")).toBeInTheDocument();
+    expect(screen.getByLabelText("Quote ID required")).toBeInTheDocument();
+    expect(screen.getByText("Local draft")).toBeInTheDocument();
     expect(screen.queryByText("Quote ID NEW-DEMO")).not.toBeInTheDocument();
   });
 
@@ -107,6 +121,7 @@ describe("App Phase 2A prototype", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
+    enterQuoteId();
     fireEvent.change(screen.getByLabelText("Proposal title"), {
       target: { value: "French individual training proposal" },
     });
@@ -120,10 +135,10 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByText("Draft preview - Letter size")).toBeInTheDocument();
     expect(screen.getByLabelText("Letter-size proposal preview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "French individual training proposal", level: 3 })).toBeInTheDocument();
-    expect(screen.getByText("Second language training proposal (Ref: New draft)")).toBeInTheDocument();
+    expect(screen.getByText("Second language training proposal (Ref: KC-2026-0623-01)")).toBeInTheDocument();
     expect(screen.queryByText("Knowledge Circle Learning Services Inc.")).not.toBeInTheDocument();
     expect(screen.queryByText("Online Second Language Training for the Public Service")).not.toBeInTheDocument();
-    expect(screen.queryByText("Quote ID: New draft")).not.toBeInTheDocument();
+    expect(screen.queryByText("Quote ID: KC-2026-0623-01")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Close preview" }));
 
@@ -142,6 +157,14 @@ describe("App Phase 2A prototype", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Download PDF" })[0]);
+
+    expect(printMock).not.toHaveBeenCalled();
+    expect(screen.getByText(/Enter a valid Quote ID from the external quote register/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close preview" }));
+    enterQuoteId();
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Download PDF" })[0]);
 
@@ -621,7 +644,7 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
     expect(within(dialog).getByText("CAD 50.00 / Per hour")).toBeInTheDocument();
-    expect(within(dialog).getAllByText("CAD 1800.00")).toHaveLength(2);
+    expect(within(dialog).getAllByText("CAD 1 800.00")).toHaveLength(2);
   });
 
   it("locks rate overrides when a service uses SOA pricing", () => {

@@ -1047,6 +1047,16 @@ td strong {
   font-weight: 600;
 }
 
+.field-stack {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field-stack label {
+  color: var(--kc-text);
+  font-weight: 600;
+}
+
 .field-help {
   align-self: end;
   border: 1px solid var(--kc-border);
@@ -2600,6 +2610,13 @@ td strong {
   color: var(--kc-muted);
 }
 
+.letter-continuation-note {
+  margin-top: 0.65rem !important;
+  color: var(--kc-muted) !important;
+  font-size: 0.8rem !important;
+  font-style: italic;
+}
+
 .letter-table {
   width: 100%;
   min-width: 0;
@@ -2620,6 +2637,7 @@ td strong {
 .letter-table th:nth-child(5),
 .letter-table td:nth-child(5) {
   text-align: right;
+  white-space: nowrap;
 }
 
 .letter-table th {
@@ -2671,6 +2689,7 @@ td strong {
 
 .letter-total strong {
   font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .letter-footer {
