@@ -5,6 +5,7 @@ export type AppRoute =
   | { name: "clients-learners"; path: "/clients-learners" }
   | { name: "price-book"; path: "/price-book" }
   | { name: "templates"; path: "/templates" }
+  | { name: "help"; path: "/help" }
   | { name: "settings"; path: "/settings" };
 
 export type NavigateTo = (path: AppRoute["path"]) => void;
@@ -41,6 +42,10 @@ export function parseRoute(pathname: string): AppRoute {
 
   if (pathname === "/templates") {
     return { name: "templates", path: "/templates" };
+  }
+
+  if (pathname === "/help") {
+    return { name: "help", path: "/help" };
   }
 
   if (pathname === "/settings") {

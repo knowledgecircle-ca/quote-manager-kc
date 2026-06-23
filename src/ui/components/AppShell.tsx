@@ -6,7 +6,7 @@ interface NavigationItem {
   label: string;
   path: Parameters<NavigateTo>[0];
   routeNames: string[];
-  icon: "proposals" | "clients" | "price-book" | "templates" | "settings";
+  icon: "proposals" | "clients" | "price-book" | "templates" | "help" | "settings";
 }
 
 const navigationItems: NavigationItem[] = [
@@ -14,6 +14,7 @@ const navigationItems: NavigationItem[] = [
   { label: "Clients", path: "/clients-learners", routeNames: ["clients-learners"], icon: "clients" },
   { label: "Price Book", path: "/price-book", routeNames: ["price-book"], icon: "price-book" },
   { label: "Templates", path: "/templates", routeNames: ["templates"], icon: "templates" },
+  { label: "Help", path: "/help", routeNames: ["help"], icon: "help" },
   { label: "Settings", path: "/settings", routeNames: ["settings"], icon: "settings" },
 ];
 
@@ -115,6 +116,15 @@ function NavigationIcon({ name }: { name: NavigationItem["icon"] }) {
       <svg aria-hidden="true" {...commonProps}>
         <rect height="14" rx="1.8" width="14" x="5" y="5" />
         <path d="M9 5v14M5 10h14M5 15h14" />
+      </svg>
+    );
+  }
+
+  if (name === "help") {
+    return (
+      <svg aria-hidden="true" {...commonProps}>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M9.7 9a2.4 2.4 0 0 1 4.6 1c0 1.8-2.3 2-2.3 3.7M12 17.2h.01" />
       </svg>
     );
   }

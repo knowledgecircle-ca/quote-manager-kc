@@ -71,6 +71,18 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByRole("heading", { name: "Proposals", level: 2 })).toBeInTheDocument();
   });
 
+  it("shows an English help guide for Kevin testing", () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Help" }));
+
+    expect(screen.getByRole("heading", { name: "Help", level: 2 })).toBeInTheDocument();
+    expect(screen.getByText(/Validate whether Kevin can build a clear Knowledge Circle proposal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Add individual second-language training for one learner/i)).toBeInTheDocument();
+    expect(screen.getByText(/Override a Non-SOA rate for this proposal only/i)).toBeInTheDocument();
+    expect(screen.getByText(/There is no backend, authentication, email, CRM integration/i)).toBeInTheDocument();
+  });
+
   it("opens the New Proposal prototype", () => {
     render(<App />);
 

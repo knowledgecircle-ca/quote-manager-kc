@@ -4,6 +4,7 @@ import { parseRoute, type AppRoute } from "@/app/routing";
 import { AppShell } from "@/ui/components/AppShell";
 import { ConfirmDialog } from "@/ui/components/ConfirmDialog";
 import { ClientsLearnersPage } from "@/ui/pages/ClientsLearnersPage";
+import { HelpPage } from "@/ui/pages/HelpPage";
 import { PriceBookPage } from "@/ui/pages/PriceBookPage";
 import { ProposalEditorPage } from "@/ui/pages/ProposalEditorPage";
 import { ProposalsPage } from "@/ui/pages/ProposalsPage";
@@ -68,6 +69,7 @@ export function App() {
       {route.name === "clients-learners" && <ClientsLearnersPage />}
       {route.name === "price-book" && <PriceBookPage />}
       {route.name === "templates" && <TemplatesPage />}
+      {route.name === "help" && <HelpPage />}
       {route.name === "settings" && <SettingsBackupPage onPrototypeAction={setDialogAction} />}
       {dialogAction && <ConfirmDialog actionName={dialogAction} onClose={() => setDialogAction(null)} />}
     </AppShell>
