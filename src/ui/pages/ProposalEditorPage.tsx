@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { printProposalDraftPdf } from "@/application/use-cases/pdf/printProposalDraftPdf";
 import { LocalDataBanner } from "@/ui/components/LocalDataBanner";
 import { QuoteSummary } from "@/ui/components/QuoteSummary";
 import { SectionCard } from "@/ui/components/SectionCard";
@@ -118,6 +119,11 @@ interface ClientDraft {
   organizationName: string;
 }
 
+interface ProposalBasicsDraft {
+  proposalTitle: string;
+  quoteDate: string;
+}
+
 const competencyOptions = ["Reading", "Writing", "Oral"] as const;
 const languageOptions = ["English", "French"] as const;
 const fullTimeHoursPerDayOptions = ["6", "7", "7.5"] as const;
@@ -187,6 +193,10 @@ const proposalPriceBookEntries = [
 ];
 
 const initialRequestedServices: RequestedService[] = [];
+const defaultProposalBasics: ProposalBasicsDraft = {
+  proposalTitle: "Second language training proposal",
+  quoteDate: "2026-06-22",
+};
 
 function serviceCardId(serviceId: string) {
   return `service-card-${serviceId}`;
@@ -1586,6 +1596,7 @@ export function ProposalEditorPage({
     organizationName: "Federal Department",
   });
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [proposalBasics, setProposalBasics] = useState<ProposalBasicsDraft>(defaultProposalBasics);
   const [proposalLanguage, setProposalLanguage] = useState<"English" | "Francais">("English");
   const [requestedServices, setRequestedServices] = useState<RequestedService[]>(initialRequestedServices);
 
@@ -1595,6 +1606,7 @@ export function ProposalEditorPage({
   );
 
   const quoteId = mode === "new" ? "New draft" : proposal.id;
+  const proposalTitle = mode === "new" ? proposalBasics.proposalTitle : proposal.title;
   const activeStepIndex = editorSteps.findIndex((step) => step.id === activeStepId);
   const nextStep = editorSteps[Math.min(activeStepIndex + 1, editorSteps.length - 1)];
   const previousStep = editorSteps[Math.max(activeStepIndex - 1, 0)];
@@ -1688,6 +1700,8 @@ function addRequestedService() {
             <BasicsStep
               clientDraft={clientDraft}
               onClientDraftChange={(updates) => setClientDraft((current) => ({ ...current, ...updates }))}
+              onProposalBasicsChange={(updates) => setProposalBasics((current) => ({ ...current, ...updates }))}
+              proposalBasics={proposalBasics}
             />
           )}
           {activeStepId === "training-phases" && (
@@ -1751,16 +1765,17 @@ function addRequestedService() {
         requestedServices={requestedServices}
         summary={liveQuoteSummary}
         trainingSummary={quoteSummaryTrainingText(requestedServices)}
-        previewTitle={mode === "new" ? "New Proposal" : proposal.title}
+        previewTitle={proposalTitle}
       />
       {isPreviewOpen && (
         <ProposalPreviewDialog
           onClose={() => setIsPreviewOpen(false)}
           proposalLanguage={proposalLanguage}
+          quoteDate={proposalBasics.quoteDate}
           quoteId={quoteId}
           requestedServices={requestedServices}
           summary={liveQuoteSummary}
-          title={mode === "new" ? "New Proposal" : proposal.title}
+          title={proposalTitle}
         />
       )}
     </section>
@@ -1770,9 +1785,13 @@ function addRequestedService() {
 function BasicsStep({
   clientDraft,
   onClientDraftChange,
+  onProposalBasicsChange,
+  proposalBasics,
 }: {
   clientDraft: ClientDraft;
   onClientDraftChange: (updates: Partial<ClientDraft>) => void;
+  onProposalBasicsChange: (updates: Partial<ProposalBasicsDraft>) => void;
+  proposalBasics: ProposalBasicsDraft;
 }) {
   return (
     <div className="page-stack">
@@ -1783,11 +1802,18 @@ function BasicsStep({
           <div className="form-grid">
             <label>
               Quote date required
-              <input type="date" defaultValue="2026-06-22" />
+              <input
+                onChange={(event) => onProposalBasicsChange({ quoteDate: event.target.value })}
+                type="date"
+                value={proposalBasics.quoteDate}
+              />
             </label>
             <label className="full-width">
               Proposal title
-              <input defaultValue="Second language training proposal" />
+              <input
+                onChange={(event) => onProposalBasicsChange({ proposalTitle: event.target.value })}
+                value={proposalBasics.proposalTitle}
+              />
             </label>
           </div>
         </fieldset>
@@ -2932,6 +2958,7 @@ function ContentStep({
 interface ProposalPreviewDialogProps {
   onClose: () => void;
   proposalLanguage: "English" | "Francais";
+  quoteDate: string;
   quoteId: string;
   requestedServices: RequestedService[];
   summary: typeof quoteSummary;
@@ -2969,8 +2996,25 @@ function proposalPreviewSubtotal(requestedServices: RequestedService[]) {
   return `${formatCadMinorUnits(subtotalMinorUnits)}${hasUnpricedRows ? " + rates to confirm" : ""}`;
 }
 
-function ProposalPreviewDialog({ onClose, proposalLanguage, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
+function pdfDocumentTitle(title: string, quoteId: string) {
+  const reference = quoteId === "New draft" ? "draft" : quoteId;
+  return `${title} - ${reference}`.replace(/[<>:"/\\|?*]+/g, "-");
+}
+
+function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
   const previewRows = proposalPreviewRows(requestedServices);
+  const assetBaseUrl = import.meta.env.BASE_URL;
+
+  function handleDownloadPdf() {
+    printProposalDraftPdf({
+      documentTitle: pdfDocumentTitle(title, quoteId),
+      getDocumentTitle: () => document.title,
+      print: () => window.print(),
+      setDocumentTitle: (nextTitle) => {
+        document.title = nextTitle;
+      },
+    });
+  }
 
   return (
     <div className="dialog-backdrop preview-backdrop" role="presentation">
@@ -2980,17 +3024,22 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteId, requestedSe
             <p className="eyebrow">Draft preview - Letter size</p>
             <h2 id="proposal-preview-title">Proposal Preview</h2>
           </div>
-          <button aria-label="Close proposal preview" className="icon-button" onClick={onClose} title="Close preview" type="button">
-            X
-          </button>
+          <div className="preview-dialog-header-actions">
+            <button className="button-primary" onClick={handleDownloadPdf} type="button">
+              Download PDF
+            </button>
+            <button aria-label="Close proposal preview" className="icon-button" onClick={onClose} title="Close preview" type="button">
+              X
+            </button>
+          </div>
         </div>
         <div className="letter-page" aria-label="Letter-size proposal preview">
           <header className="letter-header">
-            <img alt="Knowledge Circle" className="letter-logo" src="/kc-logo-horizontal.png" />
+            <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
             <span className="letter-quote-id">Second language training proposal (Ref: {quoteId})</span>
           </header>
           <section className="letter-meta-lines" aria-label="Proposal metadata">
-            <p><strong>Date:</strong> 2026-06-22</p>
+            <p><strong>Date:</strong> {quoteDate}</p>
             <p><strong>To:</strong> {summary.client}</p>
             <p><strong>Contact:</strong> {summary.contact}</p>
             <p><strong>Subject:</strong> {title}</p>
@@ -3113,7 +3162,10 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteId, requestedSe
           </section>
         </div>
         <div className="button-row dialog-actions">
-          <span className="validation-note">Draft HTML preview only. PDF generation is not implemented in this phase.</span>
+          <span className="validation-note">Use Download PDF, then choose Save as PDF in the browser print dialog.</span>
+          <button className="button-secondary" onClick={handleDownloadPdf} type="button">
+            Download PDF
+          </button>
           <button className="button-primary" onClick={onClose} type="button">
             Close preview
           </button>

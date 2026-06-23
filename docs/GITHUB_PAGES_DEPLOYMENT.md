@@ -59,6 +59,6 @@ Then it deploys the generated `dist/` folder to GitHub Pages. The `dist/` folder
 ## Current Limitations
 
 - The app is still frontend-only.
-- There is no backend, authentication, CRM integration, email service, or real PDF generation.
+- There is no backend, authentication, CRM integration, or email service. Draft PDF output uses the browser print dialog from the Letter-size preview.
 - Data shown in the prototype must remain fictitious.
 - Public GitHub repositories should not contain real client information, private attachments, secrets, or production exports.

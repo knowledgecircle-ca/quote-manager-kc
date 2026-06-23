@@ -91,16 +91,17 @@ Each requested service must be configured so the application can derive a compat
 
    Rule: this step must not become a free-form word processor. It should behave as a PDF section and clause review step. Generated service text comes from structured proposal data; reusable legal and administrative wording comes from templates.
 
-5. Preview and future PDF finalization
+5. Preview and browser PDF generation
    - block approval when required price lines or required service fields are missing;
-   - show issues before PDF generation.
+   - show issues before PDF generation;
+   - generate a Letter-size PDF through the browser print dialog;
    - present client-facing quotation lines as item, description, rate, quantity, and total.
 
-   Rule: the old prototype `Review` step is not part of the active proposal workflow. Until real PDF generation and approval validation are implemented, the visible workflow ends at `Proposal document`, and the top `Preview` action or Quote Summary preview opens the draft Letter-size proposal.
+   Rule: the old prototype `Review` step is not part of the active proposal workflow. The visible workflow ends at `Proposal document`, and the top `Preview` action or Quote Summary preview opens the same draft Letter-size proposal.
 
    Rule: proposal preview should use North American Letter size by default. `A4` should not be shown as the default format. Legal size can be considered later only if a client or contract requires it.
 
-   Rule: the top `Preview` action and the `Proposal preview` control in the Quote Summary should open the same draft preview. In this phase, the preview is an HTML Letter-size draft and must not pretend that final PDF generation is implemented.
+   Rule: the top `Preview` action and the `Proposal preview` control in the Quote Summary should open the same draft preview. In this phase, PDF output uses the browser print dialog and the user chooses `Save as PDF`. A silent PDF blob generator remains a later enhancement if needed.
 
    Rule: Price Book source codes and rate-source review data are internal audit details. They may appear in the Pricing step, but not as primary columns in the client-facing proposal preview.
 
@@ -122,4 +123,4 @@ Each requested service must be configured so the application can derive a compat
 - Price Book rate selection is automatic in this phase, based on the configured pricing path, SOA source, service type, class type, quantity, and competencies.
 - Automatic rate selection must remain reviewable and must not silently approve a proposal.
 - Quote ID must not replace the public proposal title in the PDF.
-- No backend, authentication, CRM, email, OpenAI, PDF finalization, or automatic approval is introduced by this workflow refinement.
+- No backend, authentication, CRM, email, OpenAI, silent server PDF rendering, or automatic approval is introduced by this workflow refinement.

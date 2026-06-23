@@ -2309,6 +2309,12 @@ td strong {
   margin: 0;
 }
 
+.preview-dialog-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .letter-page {
   width: min(100%, 816px);
   min-height: 1056px;
@@ -2592,6 +2598,78 @@ td strong {
   *::before,
   *::after {
     scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0.5in;
+    size: Letter;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .preview-dialog,
+  .preview-dialog .letter-page,
+  .preview-dialog .letter-page * {
+    visibility: visible !important;
+  }
+
+  .preview-backdrop {
+    position: static !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .preview-dialog {
+    width: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .preview-dialog-header,
+  .dialog-actions {
+    display: none !important;
+  }
+
+  .letter-page {
+    width: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-left: 0.12in solid #213653 !important;
+    border-radius: 0 !important;
+    padding: 0.12in 0 0 0.18in !important;
+    box-shadow: none !important;
+  }
+
+  .letter-logo {
+    width: 2.6in !important;
+  }
+
+  .letter-section,
+  .letter-meta-lines {
+    break-inside: avoid;
+  }
+
+  .letter-table {
+    font-size: 9.5pt !important;
+  }
+
+  .letter-table th,
+  .letter-table td {
+    padding: 0.08in !important;
   }
 }
 

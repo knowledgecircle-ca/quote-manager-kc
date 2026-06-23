@@ -59,7 +59,7 @@
 - Whether taxes apply, and if so which tax rules and rounding rules are required.
 - Proposal numbering format.
 - Whether clients, contacts, and learners should be reusable across proposals in the MVP.
-- Which PDF library to use.
+- Whether browser print-to-PDF is sufficient for Kevin testing, or whether a silent browser PDF library should be added behind the `PdfGenerator` port.
 - Which IndexedDB helper library to use.
 - Which runtime validation library to use for imports.
 - Whether attachments are exported inline as base64 or as a separate backup bundle.

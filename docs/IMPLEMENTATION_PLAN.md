@@ -125,6 +125,8 @@ React components must call use cases or hooks only. They must not access Indexed
 
 ## Phase 7 - PDF Preview and Download
 
+Status: first browser print-to-PDF path implemented for draft review.
+
 Tasks:
 
 - define document view model;
@@ -133,6 +135,13 @@ Tasks:
 - add preview before download;
 - document letterhead extension points;
 - test that PDF generation works in-browser.
+
+Current implementation:
+
+- the proposal preview renders a Letter-size client-facing document;
+- `Download PDF` opens the browser print dialog, where the user chooses `Save as PDF`;
+- logo, title, quote date, client, contact, training details, quotation, administrative conditions, and acceptance text are included;
+- a silent PDF blob generator remains a later implementation option behind `PdfGenerator`.
 
 ## Phase 8 - Quality Gates
 

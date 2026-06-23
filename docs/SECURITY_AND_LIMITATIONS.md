@@ -48,7 +48,7 @@ Forbidden integrations in the MVP:
 
 ## PDF Limitations
 
-PDFs are generated in the browser. The MVP will reserve documented extension points for letterhead, logo, colors, footer, and signature, but final paper design is not part of this first mission.
+PDFs are generated in the browser. The current MVP path uses the native browser print dialog from the Letter-size proposal preview; the user selects `Save as PDF`. The MVP reserves documented extension points for letterhead, logo, colors, footer, and signature. A silent PDF blob generator can be added later behind the `PdfGenerator` port if the browser print workflow is not sufficient.
 
 ## Calculation Limitations
 

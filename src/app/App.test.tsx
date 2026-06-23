@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { vi } from "vitest";
 
 import { App } from "@/app/App";
 
@@ -94,6 +95,9 @@ describe("App Phase 2A prototype", () => {
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
+    fireEvent.change(screen.getByLabelText("Proposal title"), {
+      target: { value: "French individual training proposal" },
+    });
 
     expect(screen.getByText("Letter / PDF")).toBeInTheDocument();
     expect(screen.queryByText("A4 / PDF")).not.toBeInTheDocument();
@@ -103,6 +107,7 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByRole("dialog", { name: "Proposal Preview" })).toBeInTheDocument();
     expect(screen.getByText("Draft preview - Letter size")).toBeInTheDocument();
     expect(screen.getByLabelText("Letter-size proposal preview")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "French individual training proposal", level: 3 })).toBeInTheDocument();
     expect(screen.getByText("Second language training proposal (Ref: New draft)")).toBeInTheDocument();
     expect(screen.queryByText("Knowledge Circle Learning Services Inc.")).not.toBeInTheDocument();
     expect(screen.queryByText("Online Second Language Training for the Public Service")).not.toBeInTheDocument();
@@ -115,7 +120,21 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open proposal preview" }));
 
     expect(screen.getByRole("dialog", { name: "Proposal Preview" })).toBeInTheDocument();
-    expect(screen.getByText(/Draft HTML preview only/i)).toBeInTheDocument();
+    expect(screen.getByText(/choose Save as PDF in the browser print dialog/i)).toBeInTheDocument();
+  });
+
+  it("opens the browser print dialog for PDF download", () => {
+    const originalTitle = document.title;
+    const printMock = vi.fn();
+    Object.defineProperty(window, "print", { configurable: true, value: printMock });
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Download PDF" })[0]);
+
+    expect(printMock).toHaveBeenCalledTimes(1);
+    expect(document.title).toBe(originalTitle);
   });
 
   it("shows client-facing proposal preview copy and quotation columns", () => {

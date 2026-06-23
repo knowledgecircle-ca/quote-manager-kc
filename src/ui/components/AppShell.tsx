@@ -25,6 +25,7 @@ interface AppShellProps {
 
 export function AppShell({ activeRouteName, children, onNavigate }: AppShellProps) {
   const isEditorRoute = activeRouteName === "new-proposal" || activeRouteName === "edit-proposal";
+  const assetBaseUrl = import.meta.env.BASE_URL;
 
   return (
     <div className={`app-frame app-frame-rail ${isEditorRoute ? "app-frame-editor-route" : ""}`}>
@@ -34,7 +35,7 @@ export function AppShell({ activeRouteName, children, onNavigate }: AppShellProp
             alt="Knowledge Circle symbol"
             className="sidebar-logo"
             height="96"
-            src="/kc-logo-symbol.png"
+            src={`${assetBaseUrl}kc-logo-symbol.png`}
             width="96"
           />
           <span className="brand-caption">Proposal Manager</span>
