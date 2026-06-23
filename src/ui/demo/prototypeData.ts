@@ -976,6 +976,15 @@ export const templateSections: TemplateCardData[] = [
     appliesWhen: "Every proposal PDF",
     content: "The PDF should include fields for organization or ministry, authorized representative, title, email address, Call-Up or purchase order number, authorized amount, date, and signature.",
   },
+  {
+    id: "pdf-footer",
+    title: "PDF footer",
+    status: "Template applied",
+    reviewState: "Template applied",
+    source: "Standard Knowledge Circle document footer",
+    appliesWhen: "Every proposal PDF page",
+    content: "Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada. Include page number and total page count on every page.",
+  },
 ];
 
 export const quoteSummary = {

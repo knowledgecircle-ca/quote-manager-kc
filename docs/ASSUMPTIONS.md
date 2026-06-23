@@ -65,7 +65,7 @@
 - Whether attachments are exported inline as base64 or as a separate backup bundle.
 - Whether standing offers require structured rules or editable text only in the first MVP.
 - Exact approval authority once Ezsked permissions are introduced.
-- Exact visual design for letterhead, footer, logo, and signature.
+- Exact visual design for letterhead, logo, and signature. The PDF footer text is now defined, but its final visual treatment may still evolve.
 - Whether the MVP needs bilingual UI or only bilingual proposal documents.
 
 ## Risks

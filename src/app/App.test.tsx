@@ -169,6 +169,10 @@ describe("App Phase 2A prototype", () => {
     expect(within(dialog).getByText(/indicative only and do not guarantee the final schedule/i)).toBeInTheDocument();
     expect(within(dialog).getByText(/applies Ontario statutory holidays by default/i)).toBeInTheDocument();
     expect(within(dialog).queryByText(/unavailable days: Sat, Sun/i)).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada"),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("Page")).toBeInTheDocument();
   });
 
   it("shows four proposal steps with aria-current on the active step", () => {
@@ -940,6 +944,9 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByDisplayValue(/applies Ontario statutory holidays by default/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue(/All times indicated in the proposal are Ottawa, Ontario time/i)).toBeInTheDocument();
     expect(screen.getByDisplayValue(/Tuesday and Thursday mornings/i)).toBeInTheDocument();
+    expect(screen.getByText("PDF footer")).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Knowledge Circle Language Services Inc. ©2026 1 Rideau Street/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/page number and total page count/i)).toBeInTheDocument();
     expect(screen.getByText("Template rules")).toBeInTheDocument();
     expect(screen.queryByText("Editable content")).not.toBeInTheDocument();
   });

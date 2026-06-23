@@ -2351,9 +2351,9 @@ td strong {
 }
 
 .letter-header .letter-quote-id {
-  color: var(--kc-navy-900);
-  font-size: 0.92rem;
-  font-weight: 700;
+  color: var(--kc-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
 }
 
 .letter-logo {
@@ -2365,8 +2365,8 @@ td strong {
 }
 
 .letter-quote-id {
-  color: var(--kc-text) !important;
-  font-weight: 750;
+  color: var(--kc-muted) !important;
+  font-weight: 500;
 }
 
 .letter-meta-lines {
@@ -2537,6 +2537,25 @@ td strong {
   font-weight: 750;
 }
 
+.letter-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #d3dbe3;
+  padding-top: 0.45rem;
+  color: var(--kc-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.letter-footer-page {
+  white-space: nowrap;
+}
+
+.letter-footer-page::after {
+  content: " 1 of 1";
+}
+
 .edit-dialog-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2603,8 +2622,26 @@ td strong {
 
 @media print {
   @page {
-    margin: 0.5in;
+    margin: 0.72in 0.55in 0.82in;
     size: Letter;
+
+    @top-center {
+      color: #5f6c7a;
+      content: "Knowledge Circle Language Services Inc. - Proposal";
+      font-size: 8.5pt;
+    }
+
+    @bottom-right {
+      color: #5f6c7a;
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8.5pt;
+    }
+  }
+
+  @page :first {
+    @top-center {
+      content: "";
+    }
   }
 
   html,
@@ -2660,8 +2697,24 @@ td strong {
     border: 0 !important;
     border-left: 0.12in solid #213653 !important;
     border-radius: 0 !important;
-    padding: 0.12in 0 0 0.18in !important;
+    padding: 0.12in 0 0.72in 0.18in !important;
     box-shadow: none !important;
+  }
+
+  .letter-footer {
+    position: fixed !important;
+    right: 0 !important;
+    bottom: 0.2in !important;
+    left: 0.18in !important;
+    border-top: 1px solid #cbd6df !important;
+    padding-top: 0.1in !important;
+    background: #ffffff !important;
+    color: #5f6c7a !important;
+    font-size: 8.5pt !important;
+  }
+
+  .letter-footer-page {
+    display: none !important;
   }
 
   .letter-logo {

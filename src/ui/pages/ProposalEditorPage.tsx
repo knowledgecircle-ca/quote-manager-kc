@@ -197,6 +197,8 @@ const defaultProposalBasics: ProposalBasicsDraft = {
   proposalTitle: "Second language training proposal",
   quoteDate: "2026-06-22",
 };
+const proposalFooterText =
+  "Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada";
 
 function serviceCardId(serviceId: string) {
   return `service-card-${serviceId}`;
@@ -3160,6 +3162,10 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
             <h3>Acceptance</h3>
             <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
           </section>
+          <footer className="letter-footer" aria-label="Proposal footer">
+            <span>{proposalFooterText}</span>
+            <span className="letter-footer-page">Page</span>
+          </footer>
         </div>
         <div className="button-row dialog-actions">
           <span className="validation-note">Use Download PDF, then choose Save as PDF in the browser print dialog.</span>
