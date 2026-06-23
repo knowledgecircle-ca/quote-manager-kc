@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Knowledge Circle favicon explorations">
+  <defs>
+    <symbol id="q-open" viewBox="0 0 64 64">
+      <circle cx="31" cy="31" r="20.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="8" />
+      <path d="M42.5 42.5L55 55" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="8" />
+    </symbol>
+    <symbol id="q-check" viewBox="0 0 64 64">
+      <path d="M46 18A22 22 0 1 0 45 45L50 50L58 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="7" />
+    </symbol>
+    <symbol id="q-arcs" viewBox="0 0 64 64">
+      <path d="M45 15A23 23 0 0 0 19 51" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="7" />
+      <path d="M20 49A23 23 0 0 0 46 13" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="7" opacity="0.72" />
+      <path d="M43 43L54 54" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="7" />
+    </symbol>
+  </defs>
+
+  <rect width="960" height="220" fill="#F4F7F9" />
+  <rect y="220" width="960" height="220" fill="#4F86C6" />
+
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="0">
+    <text x="80" y="44" fill="#17212B" font-size="20">1. Open circular Q</text>
+    <text x="380" y="44" fill="#17212B" font-size="20">2. Q with check tail</text>
+    <text x="680" y="44" fill="#17212B" font-size="20">3. Interlocking arcs</text>
+    <text x="80" y="264" fill="#FFFFFF" font-size="20">1. Open circular Q</text>
+    <text x="380" y="264" fill="#FFFFFF" font-size="20">2. Q with check tail</text>
+    <text x="680" y="264" fill="#FFFFFF" font-size="20">3. Interlocking arcs</text>
+  </g>
+
+  <g color="#4F86C6">
+    <use href="#q-open" x="95" y="74" width="96" height="96" />
+    <use href="#q-check" x="395" y="74" width="96" height="96" />
+    <use href="#q-arcs" x="695" y="74" width="96" height="96" />
+  </g>
+  <g color="#FFFFFF">
+    <use href="#q-open" x="95" y="294" width="96" height="96" />
+    <use href="#q-check" x="395" y="294" width="96" height="96" />
+    <use href="#q-arcs" x="695" y="294" width="96" height="96" />
+  </g>
+
+  <g color="#4F86C6">
+    <use href="#q-open" x="220" y="110" width="24" height="24" />
+    <use href="#q-check" x="520" y="110" width="24" height="24" />
+    <use href="#q-arcs" x="820" y="110" width="24" height="24" />
+    <use href="#q-open" x="252" y="114" width="16" height="16" />
+    <use href="#q-check" x="552" y="114" width="16" height="16" />
+    <use href="#q-arcs" x="852" y="114" width="16" height="16" />
+  </g>
+  <g color="#FFFFFF">
+    <use href="#q-open" x="220" y="330" width="24" height="24" />
+    <use href="#q-check" x="520" y="330" width="24" height="24" />
+    <use href="#q-arcs" x="820" y="330" width="24" height="24" />
+    <use href="#q-open" x="252" y="334" width="16" height="16" />
+    <use href="#q-check" x="552" y="334" width="16" height="16" />
+    <use href="#q-arcs" x="852" y="334" width="16" height="16" />
+  </g>
+</svg>
