@@ -2429,36 +2429,75 @@ td strong {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
+  gap: 1rem;
   border-bottom: 1px solid #8d98a4;
-  padding: 0.35rem 0 1rem;
-  text-align: center;
+  padding: 0.35rem 0 1.05rem;
 }
 
-.letter-header strong {
+.letter-brand-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   width: 100%;
-  color: var(--kc-navy-900);
-  font-size: 1.08rem;
 }
 
-.letter-header span {
-  width: 100%;
+.letter-reference-card {
+  min-width: 10rem;
+  border: 1px solid #d9e3ec;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  background: #f8fbfd;
+  text-align: right;
+}
+
+.letter-reference-card span,
+.letter-title-block p {
   color: var(--kc-muted);
-  font-size: 0.82rem;
-  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.letter-reference-card strong {
+  display: block;
+  margin-top: 0.12rem;
+  color: var(--kc-navy-900);
+  font-size: 0.95rem;
+}
+
+.letter-title-block {
+  width: 100%;
+  border-left: 4px solid var(--kc-orange-500);
+  padding-left: 0.85rem;
+}
+
+.letter-title-block p,
+.letter-title-block h3 {
+  margin: 0;
+}
+
+.letter-title-block h3 {
+  max-width: 38rem;
+  color: var(--kc-navy-900);
+  font-size: 1.55rem;
+  font-weight: 760;
+  line-height: 1.15;
 }
 
 .letter-header .letter-quote-id {
   color: var(--kc-muted);
-  font-size: 0.86rem;
+  display: block;
+  margin-top: 0.38rem;
+  font-size: 0.84rem;
   font-weight: 500;
 }
 
 .letter-logo {
-  width: 260px;
-  max-width: 70%;
+  width: 245px;
+  max-width: 58%;
   height: auto;
-  margin: 0 auto 0.45rem;
   object-fit: contain;
 }
 
@@ -2491,31 +2530,18 @@ td strong {
   font-weight: 500;
 }
 
-.letter-meta-lines {
-  margin-top: 1rem;
-  border-bottom: 1px solid #d3dbe3;
-  padding: 0.8rem 0 1rem;
-}
-
-.letter-meta-lines p {
-  margin: 0.1rem 0;
-  color: var(--kc-text);
-  font-size: 0.9rem;
-  line-height: 1.35;
-}
-
 .letter-meta-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin-top: 0.9rem;
+  gap: 0.65rem;
+  margin-top: 1rem;
 }
 
 .letter-meta-grid div {
-  border: 1px solid #edf2f6;
-  border-radius: 6px;
-  padding: 0.55rem;
-  background: #fbfdff;
+  border: 1px solid #dfe8ef;
+  border-radius: 8px;
+  padding: 0.65rem;
+  background: #f9fbfd;
 }
 
 .letter-meta-grid span,
@@ -2530,24 +2556,191 @@ td strong {
   display: block;
   margin-top: 0.12rem;
   color: var(--kc-text);
-  font-size: 0.86rem;
+  font-size: 0.88rem;
+  line-height: 1.28;
 }
 
 .letter-section {
   border-bottom: 1px solid #e6ecf1;
-  padding: 0.9rem 0;
+  padding: 0.95rem 0;
 }
 
-.letter-section h3 {
-  margin-bottom: 0.4rem;
+.letter-section-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.letter-section-heading > div > span {
+  display: block;
+  margin-bottom: 0.1rem;
+  color: var(--kc-orange-500);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.letter-section-heading h3 {
+  margin: 0;
+  color: var(--kc-navy-900);
+  font-size: 0.98rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.letter-section-icon {
+  display: grid !important;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.letter-section-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.letter-section-icon-summary,
+.letter-next-step-icon-training {
+  color: var(--kc-navy-900);
+}
+
+.letter-section-icon-training {
+  color: var(--kc-teal);
+}
+
+.letter-section-icon-quotation,
+.letter-next-step-icon-quotation {
+  color: var(--kc-success);
+}
+
+.letter-section-icon-acceptance,
+.letter-next-step-icon-acceptance {
+  color: var(--kc-orange-500);
 }
 
 .letter-section p,
-.letter-service-list {
+.letter-service-cards {
   margin: 0;
   color: var(--kc-text);
   font-size: 0.88rem;
   line-height: 1.55;
+}
+
+.letter-summary-section {
+  margin-top: 0.4rem;
+}
+
+.letter-summary-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.letter-summary-stats div {
+  border: 1px solid #dfe8ef;
+  border-radius: 8px;
+  padding: 0.65rem;
+  background: #f8fbfd;
+}
+
+.letter-summary-stats span {
+  display: block;
+  color: var(--kc-muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.letter-summary-stats strong {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--kc-text);
+  font-size: 0.92rem;
+}
+
+.letter-next-steps ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.95rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  color: var(--kc-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  list-style: none;
+}
+
+.letter-next-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.58rem;
+  align-items: center;
+  padding: 0.1rem 0;
+  color: var(--kc-text);
+  font-weight: 650;
+}
+
+.letter-next-steps li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -0.75rem;
+  width: 0.5rem;
+  height: 1px;
+  background: #cbd7e3;
+}
+
+.letter-next-step-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.letter-next-step-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.letter-next-step-number {
+  position: absolute;
+  top: -0.28rem;
+  right: -0.18rem;
+  display: grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  background: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 850;
+  line-height: 1;
 }
 
 .letter-condition-list {
@@ -2568,12 +2761,12 @@ td strong {
 .letter-condition-icon {
   display: grid;
   place-items: center;
-  width: 1.7rem;
-  height: 1.7rem;
-  border: 1px solid #cbd8e4;
-  border-radius: 999px;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 0;
+  border-radius: 0;
   color: var(--kc-navy-900);
-  background: #f4f8fb;
+  background: transparent;
 }
 
 .letter-condition-icon svg {
@@ -2599,15 +2792,44 @@ td strong {
   line-height: 1.45;
 }
 
-.letter-service-list {
+.letter-service-cards {
   display: grid;
-  gap: 0.45rem;
-  padding-left: 1.1rem;
+  gap: 0.65rem;
 }
 
-.letter-service-list span {
+.letter-service-card {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid #dfe8ef;
+  border-left: 4px solid #c9d8e6;
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  background: #fbfdff;
+}
+
+.letter-service-card strong,
+.letter-service-kicker {
   display: block;
+}
+
+.letter-service-kicker {
+  margin-bottom: 0.1rem;
   color: var(--kc-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.letter-service-card strong {
+  color: var(--kc-navy-900);
+  font-size: 0.9rem;
+}
+
+.letter-service-card p {
+  color: var(--kc-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 .letter-continuation-note {
@@ -2620,7 +2842,8 @@ td strong {
 .letter-table {
   width: 100%;
   min-width: 0;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.82rem;
   table-layout: fixed;
 }
@@ -2628,10 +2851,17 @@ td strong {
 .letter-table th,
 .letter-table td {
   border-bottom: 1px solid #e2e9ef;
-  padding: 0.48rem;
+  padding: 0.55rem 0.5rem;
   text-align: left;
   vertical-align: top;
   overflow-wrap: anywhere;
+}
+
+.letter-table td:nth-child(3),
+.letter-table th:nth-child(3),
+.letter-table td:nth-child(4),
+.letter-table th:nth-child(4) {
+  text-align: right;
 }
 
 .letter-table th:nth-child(5),
@@ -2641,8 +2871,10 @@ td strong {
 }
 
 .letter-table th {
-  color: var(--kc-muted);
+  border-bottom-color: #d7e2ea;
+  color: var(--kc-navy-900);
   font-size: 0.72rem;
+  background: #f4f7fa;
   text-transform: uppercase;
 }
 
@@ -2671,10 +2903,13 @@ td strong {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   align-items: baseline;
-  width: min(100%, 42%);
+  width: min(100%, 48%);
   margin: 0.65rem 0 0 auto;
-  border-top: 1px solid #d3dbe3;
-  padding: 0.45rem 0.08rem 0 0;
+  border: 1px solid #d7e2ea;
+  border-left: 4px solid var(--kc-orange-500);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  background: #fbfdff;
   color: var(--kc-navy-900);
   font-weight: 750;
   text-align: right;
@@ -2883,8 +3118,89 @@ td strong {
     width: 2.6in !important;
   }
 
+  .letter-meta-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.08in !important;
+  }
+
+  .letter-meta-grid div {
+    min-width: 0 !important;
+    padding: 0.08in !important;
+  }
+
+  .letter-meta-grid span {
+    font-size: 7.5pt !important;
+  }
+
+  .letter-meta-grid strong {
+    font-size: 8.5pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .letter-summary-stats {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.08in !important;
+  }
+
+  .letter-summary-stats div {
+    min-width: 0 !important;
+    padding: 0.08in !important;
+  }
+
+  .letter-section-heading {
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 0.06in !important;
+  }
+
+  .letter-section-icon,
+  .letter-next-step-icon,
+  .letter-next-step-number {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .letter-section-icon {
+    width: 0.26in !important;
+    height: 0.26in !important;
+  }
+
+  .letter-section-icon svg {
+    width: 0.15in !important;
+    height: 0.15in !important;
+  }
+
+  .letter-next-steps ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.14in !important;
+  }
+
+  .letter-next-steps li {
+    gap: 0.06in !important;
+    padding: 0 !important;
+    font-size: 8.5pt !important;
+  }
+
+  .letter-next-step-icon {
+    width: 0.3in !important;
+    height: 0.3in !important;
+    border-radius: 999px !important;
+  }
+
+  .letter-next-step-icon svg {
+    width: 0.17in !important;
+    height: 0.17in !important;
+  }
+
+  .letter-next-step-number {
+    width: 0.13in !important;
+    height: 0.13in !important;
+    font-size: 6.5pt !important;
+  }
+
   .letter-section,
-  .letter-meta-lines {
+  .letter-meta-grid {
     break-inside: avoid;
   }
 

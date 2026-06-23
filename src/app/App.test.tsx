@@ -134,8 +134,9 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByRole("dialog", { name: "Proposal Preview" })).toBeInTheDocument();
     expect(screen.getByText("Draft preview - Letter size")).toBeInTheDocument();
     expect(screen.getByLabelText("Letter-size proposal preview")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "French individual training proposal", level: 3 })).toBeInTheDocument();
-    expect(screen.getByText("Second language training proposal (Ref: KC-2026-0623-01)")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "French individual training proposal", level: 3 }).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("French individual training proposal").length).toBeGreaterThan(0);
+    expect(screen.getByText("Ref: KC-2026-0623-01")).toBeInTheDocument();
     expect(screen.queryByText("Knowledge Circle Learning Services Inc.")).not.toBeInTheDocument();
     expect(screen.queryByText("Online Second Language Training for the Public Service")).not.toBeInTheDocument();
     expect(screen.queryByText("Quote ID: KC-2026-0623-01")).not.toBeInTheDocument();
@@ -151,6 +152,7 @@ describe("App Phase 2A prototype", () => {
   });
 
   it("opens the browser print dialog for PDF download", () => {
+    vi.useFakeTimers();
     const originalTitle = document.title;
     const printMock = vi.fn();
     Object.defineProperty(window, "print", { configurable: true, value: printMock });
@@ -169,7 +171,10 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Download PDF" })[0]);
 
     expect(printMock).toHaveBeenCalledTimes(1);
+    expect(document.title).toBe("KC-2026-0623-01-Program_Coordinator");
+    vi.runOnlyPendingTimers();
     expect(document.title).toBe(originalTitle);
+    vi.useRealTimers();
   });
 
   it("shows client-facing proposal preview copy and quotation columns", () => {
@@ -182,6 +187,8 @@ describe("App Phase 2A prototype", () => {
 
     const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
     expect(within(dialog).getByAltText("Knowledge Circle")).toBeInTheDocument();
+    expect(within(dialog).getByText(/Proposal summary/i)).toBeInTheDocument();
+    expect(within(dialog).getByText("What follows")).toBeInTheDocument();
     expect(within(dialog).getByText(/is pleased to provide this proposal/i)).toBeInTheDocument();
     expect(within(dialog).getAllByText(/French part-time group training for 1 group/i).length).toBeGreaterThan(0);
     expect(within(dialog).queryByText(/This proposal text will be assembled/i)).not.toBeInTheDocument();
@@ -206,9 +213,9 @@ describe("App Phase 2A prototype", () => {
     expect(within(dialog).queryByText(/unavailable days: Sat, Sun/i)).not.toBeInTheDocument();
     expect(
       within(dialog).getAllByText("Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada"),
-    ).toHaveLength(2);
-    expect(within(dialog).getByText("Page 1 of 2")).toBeInTheDocument();
-    expect(within(dialog).getByText("Page 2 of 2")).toBeInTheDocument();
+    ).toHaveLength(4);
+    expect(within(dialog).getByText("Page 1 of 4")).toBeInTheDocument();
+    expect(within(dialog).getByText("Page 4 of 4")).toBeInTheDocument();
     expect(within(dialog).getAllByText("Total")).toHaveLength(2);
     expect(within(dialog).queryByText("Estimated subtotal")).not.toBeInTheDocument();
   });
@@ -254,8 +261,9 @@ describe("App Phase 2A prototype", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
     const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
-    expect(within(dialog).getByText("Document language:")).toBeInTheDocument();
-    expect(within(dialog).getByText("Français")).toBeInTheDocument();
+    expect(within(dialog).queryByText("Language")).not.toBeInTheDocument();
+    expect(within(dialog).getByText("Valid for")).toBeInTheDocument();
+    expect(within(dialog).getByText("30 days")).toBeInTheDocument();
   });
 
   it("keeps Basics focused on proposal document fields only", () => {

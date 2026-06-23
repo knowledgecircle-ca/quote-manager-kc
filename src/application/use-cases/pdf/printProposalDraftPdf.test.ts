@@ -19,4 +19,29 @@ describe("printProposalDraftPdf", () => {
     expect(print).toHaveBeenCalledTimes(1);
     expect(currentTitle).toBe("Proposal Manager");
   });
+
+  it("can defer title restoration until the browser print dialog closes", () => {
+    let currentTitle = "Proposal Manager";
+    let restoreTitle: (() => void) | undefined;
+    const print = vi.fn();
+
+    printProposalDraftPdf({
+      documentTitle: "KC-2026-0623-01 - French training proposal",
+      getDocumentTitle: () => currentTitle,
+      print,
+      restoreDocumentTitle: (restore) => {
+        restoreTitle = restore;
+      },
+      setDocumentTitle: (nextTitle) => {
+        currentTitle = nextTitle;
+      },
+    });
+
+    expect(print).toHaveBeenCalledTimes(1);
+    expect(currentTitle).toBe("KC-2026-0623-01 - French training proposal");
+
+    restoreTitle?.();
+
+    expect(currentTitle).toBe("Proposal Manager");
+  });
 });

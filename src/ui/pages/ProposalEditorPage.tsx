@@ -1788,7 +1788,6 @@ function addRequestedService() {
       {isPreviewOpen && (
         <ProposalPreviewDialog
           onClose={() => setIsPreviewOpen(false)}
-          proposalLanguage={proposalLanguage}
           quoteDate={proposalBasics.quoteDate}
           quoteId={quoteId}
           canGeneratePdf={canGeneratePdf}
@@ -2991,7 +2990,6 @@ function ContentStep({
 interface ProposalPreviewDialogProps {
   canGeneratePdf: boolean;
   onClose: () => void;
-  proposalLanguage: "English" | "Francais";
   quoteDate: string;
   quoteId: string;
   requestedServices: RequestedService[];
@@ -3041,9 +3039,47 @@ function proposalPreviewSubtotal(requestedServices: RequestedService[]) {
   return `${formatCadMinorUnitsForProposal(subtotalMinorUnits)}${hasUnpricedRows ? " + rates to confirm" : ""}`;
 }
 
-function pdfDocumentTitle(title: string, quoteId: string) {
-  const reference = quoteId === "New draft" ? "draft" : quoteId;
-  return `${title} - ${reference}`.replace(/[<>:"/\\|?*]+/g, "-");
+function pdfSafeNamePart(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[<>:"/\\|?*]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-_]+|[-_]+$/g, "");
+}
+
+function pdfDocumentTitle(quoteId: string, contactName: string) {
+  const reference = quoteId === "Quote ID required" ? "draft" : quoteId;
+  const contact = pdfSafeNamePart(contactName) || "Contact";
+  return `${reference}-${contact}`;
+}
+
+function previewSummaryStats(requestedServices: RequestedService[]) {
+  const trainingServices = requestedServices.filter((service) => service.family === "Second language training");
+  const assessmentServices = requestedServices.filter((service) => service.family !== "Second language training");
+  const trainingMetrics = trainingPlanMetrics(trainingServices);
+  const trainingHours = trainingServices.reduce((total, service) => total + quotedTrainingHours(service), 0);
+
+  return [
+    {
+      label: "Services",
+      value: requestedServices.length === 0 ? "None yet" : pluralizeCount(requestedServices.length, "service"),
+    },
+    {
+      label: "Training",
+      value:
+        trainingServices.length === 0
+          ? "Not included"
+          : `${displayHourValue(trainingHours)} hours / ${displayHourValue(trainingMetrics.totalParticipants)} participants`,
+    },
+    {
+      label: "Assessments",
+      value:
+        assessmentServices.length === 0
+          ? "Not included"
+          : pluralizeCount(assessmentServices.reduce((total, service) => total + assessmentCandidateCount(service), 0), "candidate"),
+    },
+  ];
 }
 
 function LetterFooter({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) {
@@ -3064,6 +3100,72 @@ function LetterContinuationHeader({ quoteId, title }: { quoteId: string; title: 
   );
 }
 
+type LetterSectionIconType = "acceptance" | "quotation" | "summary" | "training";
+
+function LetterSectionHeading({
+  eyebrow,
+  icon,
+  title,
+}: {
+  eyebrow?: string;
+  icon?: LetterSectionIconType;
+  title: string;
+}) {
+  return (
+    <div className="letter-section-heading">
+      {icon ? (
+        <span className={`letter-section-icon letter-section-icon-${icon}`}>
+          <LetterDocumentStructureIcon type={icon} />
+        </span>
+      ) : null}
+      <div>
+        {eyebrow ? <span>{eyebrow}</span> : null}
+        <h3>{title}</h3>
+      </div>
+    </div>
+  );
+}
+
+function LetterDocumentStructureIcon({ type }: { type: LetterSectionIconType }) {
+  if (type === "summary") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M5 5h14v14H5z" />
+        <path d="M8 9h8M8 13h5M8 17h3" />
+        <path d="M17 16l2 2 2-3" />
+      </svg>
+    );
+  }
+
+  if (type === "training") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M4.5 6.5h6.5c1.1 0 2 .9 2 2v10c0-1.1-.9-2-2-2H4.5z" />
+        <path d="M19.5 6.5H13c-1.1 0-2 .9-2 2v10c0-1.1.9-2 2-2h6.5z" />
+        <path d="M7.5 10h2.8M7.5 13h2.2M15 10h2.4M15 13h1.8" />
+      </svg>
+    );
+  }
+
+  if (type === "quotation") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <rect height="16" rx="2" width="12" x="6" y="4" />
+        <path d="M9 8h6M9 12h6M9 16h2.5M14.5 16H15" />
+        <path d="M19 7l1.5 1.5L22 7" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M12 3.8 18 6v5.1c0 3.6-2.4 6.8-6 8.1-3.6-1.3-6-4.5-6-8.1V6z" />
+      <path d="M9 12l2 2 4-4" />
+      <path d="M7 20h10" />
+    </svg>
+  );
+}
+
 function LetterTrainingDetailsSection({
   continuationNote,
   rows,
@@ -3073,18 +3175,21 @@ function LetterTrainingDetailsSection({
 }) {
   return (
     <section className="letter-section">
-      <h3>Training Details</h3>
+      <LetterSectionHeading eyebrow="Service plan" icon="training" title="Training Details" />
       {rows.length === 0 ? (
         <p>No services have been added yet.</p>
       ) : (
-        <ul className="letter-service-list">
+        <div className="letter-service-cards">
           {rows.map((row) => (
-            <li key={row.id}>
-              <strong>{row.label}: {row.serviceName}</strong>
-              <span>{row.configuration}</span>
-            </li>
+            <article className="letter-service-card" key={row.id}>
+              <div>
+                <span className="letter-service-kicker">{row.label}</span>
+                <strong>{row.serviceName}</strong>
+              </div>
+              <p>{row.configuration}</p>
+            </article>
           ))}
-        </ul>
+        </div>
       )}
       {continuationNote ? <p className="letter-continuation-note">{continuationNote}</p> : null}
     </section>
@@ -3102,7 +3207,7 @@ function LetterQuotationSection({
 }) {
   return (
     <section className="letter-section">
-      <h3>Quotation</h3>
+      <LetterSectionHeading eyebrow="Financial summary" icon="quotation" title="Quotation" />
       <table className="letter-table">
         <colgroup>
           <col className="letter-col-item" />
@@ -3148,16 +3253,15 @@ function LetterQuotationSection({
   );
 }
 
-function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
+function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
   const previewRows = proposalPreviewRows(requestedServices);
   const assetBaseUrl = import.meta.env.BASE_URL;
-  const compactFirstPage = previewRows.length <= 2;
-  const firstPageRows = compactFirstPage ? previewRows : previewRows.slice(0, 4);
-  const trainingContinuationChunks = compactFirstPage ? [] : chunkArray(previewRows.slice(4), 5);
-  const quotationChunks = compactFirstPage ? [] : chunkArray(previewRows.length === 0 ? [] : previewRows, 8);
+  const summaryStats = previewSummaryStats(requestedServices);
+  const trainingChunks = chunkArray(previewRows, 4);
+  const quotationChunks = chunkArray(previewRows.length === 0 ? [] : previewRows, 6);
   const subtotal = proposalPreviewSubtotal(requestedServices);
   let nextPageNumber = 2;
-  const trainingContinuationPages = trainingContinuationChunks.map((rows) => ({
+  const trainingPages = trainingChunks.map((rows) => ({
     pageNumber: nextPageNumber++,
     rows,
   }));
@@ -3175,9 +3279,12 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quot
     }
 
     printProposalDraftPdf({
-      documentTitle: pdfDocumentTitle(title, quoteId),
+      documentTitle: pdfDocumentTitle(quoteId, summary.contact),
       getDocumentTitle: () => document.title,
       print: () => window.print(),
+      restoreDocumentTitle: (restore) => {
+        window.setTimeout(restore, 1_000);
+      },
       setDocumentTitle: (nextTitle) => {
         document.title = nextTitle;
       },
@@ -3205,34 +3312,84 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quot
           <div className="letter-page" aria-label={`Letter-size proposal preview page 1 of ${proposalPageCount}`}>
             <div className="letter-page-content">
               <header className="letter-header">
-                <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
-                <span className="letter-quote-id">Second language training proposal (Ref: {quoteId})</span>
+                <div className="letter-brand-row">
+                  <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
+                  <div className="letter-reference-card">
+                    <span>Proposal reference</span>
+                    <strong>{quoteId}</strong>
+                  </div>
+                </div>
+                <div className="letter-title-block">
+                  <p>Knowledge Circle Proposal</p>
+                  <h3>{title}</h3>
+                  <span className="letter-quote-id">Ref: {quoteId}</span>
+                </div>
               </header>
-              <section className="letter-meta-lines" aria-label="Proposal metadata">
-                <p><strong>Date:</strong> {quoteDate}</p>
-                <p><strong>To:</strong> {summary.client}</p>
-                <p><strong>Contact:</strong> {summary.contact}</p>
-                <p><strong>Subject:</strong> {title}</p>
-                <p><strong>Document language:</strong> {proposalLanguageLabel(proposalLanguage)}</p>
+              <section className="letter-meta-grid" aria-label="Proposal metadata">
+                <div>
+                  <span>Prepared for</span>
+                  <strong>{summary.client}</strong>
+                </div>
+                <div>
+                  <span>Contact</span>
+                  <strong>{summary.contact}</strong>
+                </div>
+                <div>
+                  <span>Issued</span>
+                  <strong>{quoteDate}</strong>
+                </div>
+                <div>
+                  <span>Valid for</span>
+                  <strong>30 days</strong>
+                </div>
               </section>
-              <section className="letter-section">
-                <h3>{title}</h3>
+              <section className="letter-section letter-summary-section">
+                <LetterSectionHeading eyebrow="Proposal summary" title={title} />
                 <p>{generatedOverviewText(requestedServices)}</p>
+                <div className="letter-summary-stats" aria-label="Proposal summary metrics">
+                  {summaryStats.map((stat) => (
+                    <div key={stat.label}>
+                      <span>{stat.label}</span>
+                      <strong>{stat.value}</strong>
+                    </div>
+                  ))}
+                </div>
               </section>
-              <LetterTrainingDetailsSection
-                continuationNote={trainingContinuationPages.length > 0 ? "Training details continue on the next page." : undefined}
-                rows={firstPageRows}
-              />
-              {compactFirstPage ? <LetterQuotationSection rows={previewRows} showTotal subtotal={subtotal} /> : null}
+              <section className="letter-section letter-next-steps">
+                <LetterSectionHeading eyebrow="Document structure" title="What follows" />
+                <ol>
+                  <li>
+                    <span className="letter-next-step-icon letter-next-step-icon-training">
+                      <span className="letter-next-step-number">1</span>
+                      <LetterDocumentStructureIcon type="training" />
+                    </span>
+                    <span>Training and assessment details</span>
+                  </li>
+                  <li>
+                    <span className="letter-next-step-icon letter-next-step-icon-quotation">
+                      <span className="letter-next-step-number">2</span>
+                      <LetterDocumentStructureIcon type="quotation" />
+                    </span>
+                    <span>Quotation and estimated total</span>
+                  </li>
+                  <li>
+                    <span className="letter-next-step-icon letter-next-step-icon-acceptance">
+                      <span className="letter-next-step-number">3</span>
+                      <LetterDocumentStructureIcon type="acceptance" />
+                    </span>
+                    <span>Administrative conditions and acceptance instructions</span>
+                  </li>
+                </ol>
+              </section>
             </div>
             <LetterFooter pageNumber={1} totalPages={proposalPageCount} />
           </div>
-          {trainingContinuationPages.map((page, index) => (
+          {trainingPages.map((page, index) => (
             <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page ${page.pageNumber} of ${proposalPageCount}`} key={`training-${page.pageNumber}`}>
               <div className="letter-page-content">
                 <LetterContinuationHeader quoteId={quoteId} title={title} />
                 <LetterTrainingDetailsSection
-                  continuationNote={index < trainingContinuationPages.length - 1 ? "Training details continue on the next page." : undefined}
+                  continuationNote={index < trainingPages.length - 1 ? "Training details continue on the next page." : undefined}
                   rows={page.rows}
                 />
               </div>
@@ -3252,7 +3409,7 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quot
             <div className="letter-page-content">
               <LetterContinuationHeader quoteId={quoteId} title={title} />
               <section className="letter-section">
-                <h3>Administrative Conditions</h3>
+                <LetterSectionHeading eyebrow="Client conditions" icon="acceptance" title="Administrative Conditions" />
                 <ul className="letter-condition-list">
                   <li>
                     <span aria-hidden="true" className="letter-condition-icon">
@@ -3305,7 +3462,7 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, proposalLanguage, quot
                 </ul>
               </section>
               <section className="letter-section">
-                <h3>Acceptance</h3>
+                <LetterSectionHeading eyebrow="Next step" icon="acceptance" title="Acceptance" />
                 <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
               </section>
             </div>
