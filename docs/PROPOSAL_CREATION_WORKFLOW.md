@@ -96,14 +96,14 @@ Each requested service must be configured so the application can derive a compat
    - show issues before PDF generation;
    - generate a Letter-size PDF through the browser print dialog;
    - include the standard Knowledge Circle footer on every printed page;
-   - reserve page number and total page count for the dedicated PDF generator;
+   - show controlled page numbering in the proposal preview and printed PDF;
    - present client-facing quotation lines as item, description, rate, quantity, and total.
 
    Rule: the old prototype `Review` step is not part of the active proposal workflow. The visible workflow ends at `Proposal document`, and the top `Preview` action or Quote Summary preview opens the same draft Letter-size proposal.
 
    Rule: proposal preview should use North American Letter size by default. `A4` should not be shown as the default format. Legal size can be considered later only if a client or contract requires it.
 
-   Rule: the PDF footer should read `Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada`. Accurate `Page X of Y` pagination is not reliable through the browser print dialog and belongs to the dedicated PDF generator.
+   Rule: the PDF footer should read `Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada`, with `Page X of Y` shown from the controlled proposal preview pagination.
 
    Rule: the top `Preview` action and the `Proposal preview` control in the Quote Summary should open the same draft preview. In this phase, PDF output uses the browser print dialog and the user chooses `Save as PDF`. A silent PDF blob generator remains a later enhancement if needed.
 

@@ -3003,9 +3003,19 @@ function pdfDocumentTitle(title: string, quoteId: string) {
   return `${title} - ${reference}`.replace(/[<>:"/\\|?*]+/g, "-");
 }
 
+function LetterFooter({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) {
+  return (
+    <footer className="letter-footer" aria-label={`Proposal footer page ${pageNumber} of ${totalPages}`}>
+      <span>{proposalFooterCompany} &copy;2026 {proposalFooterAddress}</span>
+      <span className="letter-footer-page">Page {pageNumber} of {totalPages}</span>
+    </footer>
+  );
+}
+
 function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
   const previewRows = proposalPreviewRows(requestedServices);
   const assetBaseUrl = import.meta.env.BASE_URL;
+  const proposalPageCount = 2;
 
   function handleDownloadPdf() {
     printProposalDraftPdf({
@@ -3035,143 +3045,150 @@ function ProposalPreviewDialog({ onClose, proposalLanguage, quoteDate, quoteId, 
             </button>
           </div>
         </div>
-        <div className="letter-page" aria-label="Letter-size proposal preview">
-          <div className="letter-print-continuation-header" aria-hidden="true">
-            Knowledge Circle Language Services Inc. - Proposal
-          </div>
-          <header className="letter-header">
-            <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
-            <span className="letter-quote-id">Second language training proposal (Ref: {quoteId})</span>
-          </header>
-          <section className="letter-meta-lines" aria-label="Proposal metadata">
-            <p><strong>Date:</strong> {quoteDate}</p>
-            <p><strong>To:</strong> {summary.client}</p>
-            <p><strong>Contact:</strong> {summary.contact}</p>
-            <p><strong>Subject:</strong> {title}</p>
-            <p><strong>Document language:</strong> {proposalLanguageLabel(proposalLanguage)}</p>
-          </section>
-          <section className="letter-section">
-            <h3>{title}</h3>
-            <p>{generatedOverviewText(requestedServices)}</p>
-          </section>
-          <section className="letter-section">
-            <h3>Training Details</h3>
-            {previewRows.length === 0 ? (
-              <p>No services have been added yet.</p>
-            ) : (
-              <ul className="letter-service-list">
-                {previewRows.map((row) => (
-                  <li key={row.id}>
-                    <strong>{row.label}: {row.serviceName}</strong>
-                    <span>{row.configuration}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <section className="letter-section">
-            <h3>Quotation</h3>
-            <table className="letter-table">
-              <colgroup>
-                <col className="letter-col-item" />
-                <col className="letter-col-description" />
-                <col className="letter-col-rate" />
-                <col className="letter-col-quantity" />
-                <col className="letter-col-total" />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Description</th>
-                  <th>Rate</th>
-                  <th>Quantity</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
+        <div className="letter-pages" aria-label="Letter-size proposal preview">
+          <div className="letter-page" aria-label={`Letter-size proposal preview page 1 of ${proposalPageCount}`}>
+            <div className="letter-page-content">
+              <header className="letter-header">
+                <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
+                <span className="letter-quote-id">Second language training proposal (Ref: {quoteId})</span>
+              </header>
+              <section className="letter-meta-lines" aria-label="Proposal metadata">
+                <p><strong>Date:</strong> {quoteDate}</p>
+                <p><strong>To:</strong> {summary.client}</p>
+                <p><strong>Contact:</strong> {summary.contact}</p>
+                <p><strong>Subject:</strong> {title}</p>
+                <p><strong>Document language:</strong> {proposalLanguageLabel(proposalLanguage)}</p>
+              </section>
+              <section className="letter-section">
+                <h3>{title}</h3>
+                <p>{generatedOverviewText(requestedServices)}</p>
+              </section>
+              <section className="letter-section">
+                <h3>Training Details</h3>
                 {previewRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={5}>No quotation lines yet.</td>
-                  </tr>
+                  <p>No services have been added yet.</p>
                 ) : (
-                  previewRows.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.serviceName}</td>
-                      <td>{row.description}</td>
-                      <td>{row.rate} / {row.unit}</td>
-                      <td>{row.quantity}</td>
-                      <td>{row.amount}</td>
-                    </tr>
-                  ))
+                  <ul className="letter-service-list">
+                    {previewRows.map((row) => (
+                      <li key={row.id}>
+                        <strong>{row.label}: {row.serviceName}</strong>
+                        <span>{row.configuration}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </tbody>
-            </table>
-            <div className="letter-total">
-              <span>Total</span>
-              <strong>{proposalPreviewSubtotal(requestedServices)}</strong>
+              </section>
+              <section className="letter-section">
+                <h3>Quotation</h3>
+                <table className="letter-table">
+                  <colgroup>
+                    <col className="letter-col-item" />
+                    <col className="letter-col-description" />
+                    <col className="letter-col-rate" />
+                    <col className="letter-col-quantity" />
+                    <col className="letter-col-total" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Description</th>
+                      <th>Rate</th>
+                      <th>Quantity</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5}>No quotation lines yet.</td>
+                      </tr>
+                    ) : (
+                      previewRows.map((row) => (
+                        <tr key={row.id}>
+                          <td>{row.serviceName}</td>
+                          <td>{row.description}</td>
+                          <td>{row.rate} / {row.unit}</td>
+                          <td>{row.quantity}</td>
+                          <td>{row.amount}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+                <div className="letter-total">
+                  <span>Total</span>
+                  <strong>{proposalPreviewSubtotal(requestedServices)}</strong>
+                </div>
+              </section>
             </div>
-          </section>
-          <section className="letter-section">
-            <h3>Administrative Conditions</h3>
-            <ul className="letter-condition-list">
-              <li>
-                <span aria-hidden="true" className="letter-condition-icon">
-                  <svg viewBox="0 0 24 24">
-                    <rect height="15" rx="2" width="16" x="4" y="5" />
-                    <path d="M8 3v4M16 3v4M4 10h16M8 15l2 2 5-5" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>Offer validity</strong>
-                  <p>This proposal is valid for 30 days from the issue date.</p>
-                </div>
-              </li>
-              <li>
-                <span aria-hidden="true" className="letter-condition-icon">
-                  <svg viewBox="0 0 24 24">
-                    <rect height="11" rx="2" width="16" x="4" y="5" />
-                    <path d="M9 20h6M12 16v4M8 9h8M8 12h5" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>MyLearningMyWay access</strong>
-                  <p>Learners may access class links, calendars, materials, attendance sheets, homework, progress reports, class reports, and other program information through MyLearningMyWay when applicable.</p>
-                </div>
-              </li>
-              <li>
-                <span aria-hidden="true" className="letter-condition-icon">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="8" />
-                    <path d="M12 8v4l3 2M7 18l-2 2M17 18l2 2" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>Scheduling preferences</strong>
-                  <p>Scheduling preferences, preferred days, preferred times, location details, time zone, and other availability information are considered for planning purposes only. All times indicated in this proposal are Ottawa, Ontario time (Eastern Time), unless expressly stated otherwise. Preferred days and AM/PM preferences, including common part-time requests such as Tuesday and Thursday mornings, are indicative only and do not guarantee the final schedule, instructor availability, delivery location, start date, class time, or reserved training capacity.</p>
-                </div>
-              </li>
-              <li>
-                <span aria-hidden="true" className="letter-condition-icon">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M5 5h14M7 5v14h10V5M9 9h6M9 13h3" />
-                    <path d="M16 15l1.5 1.5L20 14" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>Statutory holidays</strong>
-                  <p>Knowledge Circle is based in Ottawa and applies Ontario statutory holidays by default when planning schedules. If the client requires additional provincial, territorial, organizational, or location-specific holidays to be observed, the client must identify them in writing before the schedule is confirmed.</p>
-                </div>
-              </li>
-            </ul>
-          </section>
-          <section className="letter-section">
-            <h3>Acceptance</h3>
-            <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
-          </section>
-          <footer className="letter-footer" aria-label="Proposal footer">
-            <span>{proposalFooterCompany} &copy;2026 {proposalFooterAddress}</span>
-            <span className="letter-footer-page">Page number added by final PDF generator</span>
-          </footer>
+            <LetterFooter pageNumber={1} totalPages={proposalPageCount} />
+          </div>
+          <div className="letter-page letter-page-continuation" aria-label={`Letter-size proposal preview page 2 of ${proposalPageCount}`}>
+            <div className="letter-page-content">
+              <header className="letter-continuation-header">
+                <strong>Knowledge Circle Language Services Inc.</strong>
+                <span>{title} (Ref: {quoteId})</span>
+              </header>
+              <section className="letter-section">
+                <h3>Administrative Conditions</h3>
+                <ul className="letter-condition-list">
+                  <li>
+                    <span aria-hidden="true" className="letter-condition-icon">
+                      <svg viewBox="0 0 24 24">
+                        <rect height="15" rx="2" width="16" x="4" y="5" />
+                        <path d="M8 3v4M16 3v4M4 10h16M8 15l2 2 5-5" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>Offer validity</strong>
+                      <p>This proposal is valid for 30 days from the issue date.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span aria-hidden="true" className="letter-condition-icon">
+                      <svg viewBox="0 0 24 24">
+                        <rect height="11" rx="2" width="16" x="4" y="5" />
+                        <path d="M9 20h6M12 16v4M8 9h8M8 12h5" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>MyLearningMyWay access</strong>
+                      <p>Learners may access class links, calendars, materials, attendance sheets, homework, progress reports, class reports, and other program information through MyLearningMyWay when applicable.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span aria-hidden="true" className="letter-condition-icon">
+                      <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" />
+                        <path d="M12 8v4l3 2M7 18l-2 2M17 18l2 2" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>Scheduling preferences</strong>
+                      <p>Scheduling preferences, preferred days, preferred times, location details, time zone, and other availability information are considered for planning purposes only. All times indicated in this proposal are Ottawa, Ontario time (Eastern Time), unless expressly stated otherwise. Preferred days and AM/PM preferences, including common part-time requests such as Tuesday and Thursday mornings, are indicative only and do not guarantee the final schedule, instructor availability, delivery location, start date, class time, or reserved training capacity.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span aria-hidden="true" className="letter-condition-icon">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M5 5h14M7 5v14h10V5M9 9h6M9 13h3" />
+                        <path d="M16 15l1.5 1.5L20 14" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>Statutory holidays</strong>
+                      <p>Knowledge Circle is based in Ottawa and applies Ontario statutory holidays by default when planning schedules. If the client requires additional provincial, territorial, organizational, or location-specific holidays to be observed, the client must identify them in writing before the schedule is confirmed.</p>
+                    </div>
+                  </li>
+                </ul>
+              </section>
+              <section className="letter-section">
+                <h3>Acceptance</h3>
+                <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
+              </section>
+            </div>
+            <LetterFooter pageNumber={2} totalPages={proposalPageCount} />
+          </div>
         </div>
         <div className="button-row dialog-actions">
           <span className="validation-note">Use Download PDF, then choose Save as PDF in the browser print dialog.</span>

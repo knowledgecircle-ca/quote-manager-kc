@@ -170,8 +170,10 @@ describe("App Phase 2A prototype", () => {
     expect(within(dialog).getByText(/applies Ontario statutory holidays by default/i)).toBeInTheDocument();
     expect(within(dialog).queryByText(/unavailable days: Sat, Sun/i)).not.toBeInTheDocument();
     expect(
-      within(dialog).getByText("Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada"),
-    ).toBeInTheDocument();
+      within(dialog).getAllByText("Knowledge Circle Language Services Inc. ©2026 1 Rideau Street, 7th Floor, Ottawa K1N 8S7, Canada"),
+    ).toHaveLength(2);
+    expect(within(dialog).getByText("Page 1 of 2")).toBeInTheDocument();
+    expect(within(dialog).getByText("Page 2 of 2")).toBeInTheDocument();
     expect(within(dialog).getAllByText("Total")).toHaveLength(2);
     expect(within(dialog).queryByText("Estimated subtotal")).not.toBeInTheDocument();
   });
@@ -947,7 +949,7 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByDisplayValue(/Tuesday and Thursday mornings/i)).toBeInTheDocument();
     expect(screen.getByText("PDF footer")).toBeInTheDocument();
     expect(screen.getByDisplayValue(/Knowledge Circle Language Services Inc. ©2026 1 Rideau Street/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue(/reserved for the final dedicated PDF generator/i)).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Include Page X of Y on every proposal page/i)).toBeInTheDocument();
     expect(screen.getByText("Template rules")).toBeInTheDocument();
     expect(screen.queryByText("Editable content")).not.toBeInTheDocument();
   });
