@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { vi } from "vitest";
 
 import { App } from "@/app/App";
@@ -148,14 +148,39 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open proposal preview" }));
 
     expect(screen.getByRole("dialog", { name: "Proposal Preview" })).toBeInTheDocument();
-    expect(screen.getByText(/Suggested PDF file name: KC-2026-0623-01-Program_Coordinator/i)).toBeInTheDocument();
+    expect(screen.getByText(/Suggested PDF file name: KC-2026-0623-01-Program_Coordinator\.pdf/i)).toBeInTheDocument();
   });
 
-  it("opens the browser print dialog for PDF download", () => {
+  it("copies the suggested PDF file name from the proposal preview", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
+    enterQuoteId();
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy file name" }));
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith("KC-2026-0623-01-Program_Coordinator.pdf");
+    });
+    expect(screen.getByText(/File name copied: KC-2026-0623-01-Program_Coordinator\.pdf/i)).toBeInTheDocument();
+  });
+
+  it("opens the browser print dialog for PDF download", async () => {
     vi.useFakeTimers();
     const originalTitle = document.title;
     const printMock = vi.fn();
+    const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(window, "print", { configurable: true, value: printMock });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
     render(<App />);
 
     fireEvent.click(screen.getByRole("button", { name: "New proposal" }));
@@ -171,6 +196,10 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Download PDF" })[0]);
 
     expect(printMock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(writeText).toHaveBeenCalledWith("KC-2026-0623-01-Program_Coordinator.pdf");
     expect(document.title).toBe("KC-2026-0623-01-Program_Coordinator");
     vi.runOnlyPendingTimers();
     expect(document.title).toBe(originalTitle);

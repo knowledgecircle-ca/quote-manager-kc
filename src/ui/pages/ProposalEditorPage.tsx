@@ -3494,6 +3494,8 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
   const previewRows = proposalPreviewRows(requestedServices);
   const assetBaseUrl = import.meta.env.BASE_URL;
   const suggestedPdfFileName = pdfDocumentTitle(quoteId, summary.contact);
+  const suggestedPdfFileNameWithExtension = `${suggestedPdfFileName}.pdf`;
+  const [copiedFileName, setCopiedFileName] = useState(false);
   const summaryStats = previewSummaryStats(requestedServices);
   const trainingChunks = chunkArray(previewRows, 4);
   const quotationChunks = chunkArray(previewRows.length === 0 ? [] : previewRows, 6);
@@ -3511,10 +3513,26 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
   const adminPageNumber = nextPageNumber;
   const proposalPageCount = adminPageNumber;
 
+  async function copySuggestedPdfFileName() {
+    if (!navigator.clipboard) {
+      setCopiedFileName(false);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(suggestedPdfFileNameWithExtension);
+      setCopiedFileName(true);
+    } catch {
+      setCopiedFileName(false);
+    }
+  }
+
   function handleDownloadPdf() {
     if (!canGeneratePdf) {
       return;
     }
+
+    void copySuggestedPdfFileName();
 
     printProposalDraftPdf({
       documentTitle: suggestedPdfFileName,
@@ -3547,6 +3565,9 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
             <h2 id="proposal-preview-title">Proposal Preview</h2>
           </div>
           <div className="preview-dialog-header-actions">
+            <button className="button-secondary" disabled={!canGeneratePdf} onClick={() => void copySuggestedPdfFileName()} type="button">
+              Copy file name
+            </button>
             <button className="button-primary" disabled={!canGeneratePdf} onClick={handleDownloadPdf} type="button">
               Download PDF
             </button>
@@ -3737,7 +3758,9 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
         <div className="button-row dialog-actions">
           <span className="validation-note">
             {canGeneratePdf
-              ? `Suggested PDF file name: ${suggestedPdfFileName}`
+              ? copiedFileName
+                ? `File name copied: ${suggestedPdfFileNameWithExtension}. If the Save As field is blank, press Ctrl+V.`
+                : `Suggested PDF file name: ${suggestedPdfFileNameWithExtension}`
               : "Enter a valid Quote ID from the external quote register before generating the PDF. Format: KC-YYYY-MMDD-XX."}
           </span>
           <button className="button-secondary" disabled={!canGeneratePdf} onClick={handleDownloadPdf} type="button">
