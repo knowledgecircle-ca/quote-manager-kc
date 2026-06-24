@@ -3493,6 +3493,7 @@ function LetterQuotationSection({
 function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, requestedServices, summary, title }: ProposalPreviewDialogProps) {
   const previewRows = proposalPreviewRows(requestedServices);
   const assetBaseUrl = import.meta.env.BASE_URL;
+  const suggestedPdfFileName = pdfDocumentTitle(quoteId, summary.contact);
   const summaryStats = previewSummaryStats(requestedServices);
   const trainingChunks = chunkArray(previewRows, 4);
   const quotationChunks = chunkArray(previewRows.length === 0 ? [] : previewRows, 6);
@@ -3516,11 +3517,20 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
     }
 
     printProposalDraftPdf({
-      documentTitle: pdfDocumentTitle(quoteId, summary.contact),
+      documentTitle: suggestedPdfFileName,
       getDocumentTitle: () => document.title,
       print: () => window.print(),
       restoreDocumentTitle: (restore) => {
-        window.setTimeout(restore, 1_000);
+        const restoreAfterPrint = () => {
+          window.removeEventListener("afterprint", restoreAfterPrint);
+          window.removeEventListener("focus", restoreAfterPrint);
+          window.clearTimeout(fallbackTimer);
+          restore();
+        };
+
+        window.addEventListener("afterprint", restoreAfterPrint, { once: true });
+        window.addEventListener("focus", restoreAfterPrint, { once: true });
+        const fallbackTimer = window.setTimeout(restoreAfterPrint, 60_000);
       },
       setDocumentTitle: (nextTitle) => {
         document.title = nextTitle;
@@ -3727,7 +3737,7 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
         <div className="button-row dialog-actions">
           <span className="validation-note">
             {canGeneratePdf
-              ? "Use Download PDF, then choose Save as PDF in the browser print dialog."
+              ? `Suggested PDF file name: ${suggestedPdfFileName}`
               : "Enter a valid Quote ID from the external quote register before generating the PDF. Format: KC-YYYY-MMDD-XX."}
           </span>
           <button className="button-secondary" disabled={!canGeneratePdf} onClick={handleDownloadPdf} type="button">

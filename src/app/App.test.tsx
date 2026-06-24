@@ -148,7 +148,7 @@ describe("App Phase 2A prototype", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open proposal preview" }));
 
     expect(screen.getByRole("dialog", { name: "Proposal Preview" })).toBeInTheDocument();
-    expect(screen.getByText(/choose Save as PDF in the browser print dialog/i)).toBeInTheDocument();
+    expect(screen.getByText(/Suggested PDF file name: KC-2026-0623-01-Program_Coordinator/i)).toBeInTheDocument();
   });
 
   it("opens the browser print dialog for PDF download", () => {
