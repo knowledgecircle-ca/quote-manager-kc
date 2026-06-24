@@ -100,6 +100,7 @@ interface RequestedService {
   reserveHours: string;
   targetLanguages: TargetLanguage[];
   participants: string;
+  learnerName: string;
   hours: string;
   candidates: string;
   englishCandidates: string;
@@ -258,6 +259,7 @@ function defaultLanguageTrainingService(id: string): RequestedService {
     reserveHours: "0",
     targetLanguages: ["French"],
     participants: "3",
+    learnerName: "",
     hours: "180",
     candidates: "",
     englishCandidates: "0",
@@ -315,6 +317,7 @@ function defaultAssessmentService(id: string): RequestedService {
     reserveHours: "",
     targetLanguages: ["French"],
     participants: "",
+    learnerName: "",
     hours: "",
     candidates: "1",
     englishCandidates: "0",
@@ -654,6 +657,7 @@ function normalizeRequestedService(service: RequestedService): RequestedService 
         fullTimeHoursPerWeek: service.fullTimeHoursPerWeek || "30",
         groupSession: service.groupSession || "Summer",
         hours: service.hours || "1",
+        learnerName: classType === "Individual" ? service.learnerName ?? "" : "",
         partTimeClassDurationHours: service.partTimeClassDurationHours || "1.5",
         partTimeSessionsPerWeek: service.partTimeSessionsPerWeek || "2",
         participants: classType === "Individual" ? service.participants || "1" : service.participants || "2",
@@ -690,6 +694,7 @@ function normalizeRequestedService(service: RequestedService): RequestedService 
         partTimeClassDurationHours: "",
         partTimeSessionsPerWeek: "",
         participants: "",
+        learnerName: "",
         reserveHours: "",
         scheduleNotes: "",
         schedulePreferenceScope: "whole-service",
@@ -1092,6 +1097,60 @@ function participantSummaryForCount(value: string) {
   return participants === "1" ? "1 participant" : `${participants} participants`;
 }
 
+function trimmedLearnerName(service: RequestedService) {
+  return service.learnerName?.trim() ?? "";
+}
+
+function individualLearnerPhrase(service: RequestedService) {
+  if (service.classType !== "Individual") {
+    return "";
+  }
+
+  const learnerName = trimmedLearnerName(service);
+  const learnerCount = positiveIntegerValue(service.participants);
+  if (learnerName && learnerCount <= 1) {
+    return ` for ${learnerName}`;
+  }
+
+  return learnerCount > 1 ? ` for ${pluralizeCount(learnerCount, "learner")}` : "";
+}
+
+function individualLearnerDetailSentence(service: RequestedService) {
+  const learnerName = trimmedLearnerName(service);
+  const learnerCount = positiveIntegerValue(service.participants);
+
+  if (service.classType !== "Individual" || !learnerName || learnerCount <= 1) {
+    return "";
+  }
+
+  return ` Learner names or notes provided: ${learnerName}.`;
+}
+
+function individualQuotationLearnerPhrase(service: RequestedService) {
+  if (service.classType !== "Individual") {
+    return "";
+  }
+
+  const learnerName = trimmedLearnerName(service);
+  const learnerCount = positiveIntegerValue(service.participants);
+  if (learnerName) {
+    return learnerCount <= 1 ? ` for ${learnerName}` : ` for ${pluralizeCount(learnerCount, "learner")}`;
+  }
+
+  return ` for ${pluralizeCount(learnerCount, "learner")}`;
+}
+
+function individualLearnerFactValue(service: RequestedService) {
+  const learnerCount = positiveIntegerValue(service.participants);
+  const learnerName = trimmedLearnerName(service);
+
+  if (!learnerName) {
+    return learnerCount > 0 ? pluralizeCount(learnerCount, "learner") : "To be confirmed with the client";
+  }
+
+  return learnerCount > 1 ? pluralizeCount(learnerCount, "learner") : learnerName;
+}
+
 function totalGroupParticipants(service: RequestedService) {
   return service.trainingGroups.reduce((total, group) => total + expectedParticipantsValue(group), 0);
 }
@@ -1157,6 +1216,40 @@ function trainingDurationWeeks(service: RequestedService) {
   return Math.floor((endWeekMonday - startWeekMonday) / (7 * 86_400_000)) + 1;
 }
 
+function formatProposalDate(value: string) {
+  const parsed = parseDateToUtc(value);
+  if (parsed === null) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-CA", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  }).format(new Date(parsed));
+}
+
+function addUtcDays(value: string, days: number) {
+  const parsed = parseDateToUtc(value);
+  if (parsed === null) {
+    return "";
+  }
+
+  return new Date(parsed + days * 86_400_000).toISOString().slice(0, 10);
+}
+
+function formatProposalDateRange(startDate: string, endDate: string) {
+  const start = formatProposalDate(startDate);
+  const end = formatProposalDate(endDate);
+
+  if (start && end) {
+    return `${start} to ${end}`;
+  }
+
+  return start || end || "To be confirmed with the client";
+}
+
 function weeklyTrainingHours(service: RequestedService) {
   return service.trainingFormat === "Full-time" ? numericValue(service.fullTimeHoursPerWeek) : partTimeWeeklyHours(service);
 }
@@ -1177,6 +1270,15 @@ function calculatedTrainingGroupSetHours(group: TrainingGroup) {
 
 function calendarSpanWeeksForGroup(group: TrainingGroup) {
   return numericValue(group.teachingWeeks) + numericValue(group.bufferWeeks);
+}
+
+function trainingGroupEndDate(group: TrainingGroup) {
+  const spanWeeks = calendarSpanWeeksForGroup(group);
+  if (spanWeeks <= 0) {
+    return "";
+  }
+
+  return addUtcDays(group.trainingStartDate, spanWeeks * 7 - 1);
 }
 
 function calculatedTrainingHours(service: RequestedService) {
@@ -1425,7 +1527,7 @@ function proposalTrainingDetailText(service: RequestedService, priceLine?: DemoP
               ? `Capacity is currently planned at up to ${capacityRule.maximum} participants per group until a source-specific limit is confirmed.`
               : `The selected source supports up to ${capacityRule.maximum} participants per group.`;
 
-          return `${group.language} part-time group training for ${pluralizeCount(groupCount, "group")} in the ${group.groupSession.toLowerCase()} session. Teaching is planned for ${weekLabel(numericValue(group.teachingWeeks))} with ${weekLabel(numericValue(group.bufferWeeks))} of scheduling buffer, delivered by ${group.deliveryMode} at ${clientFacingGroupSchedule(group)}. This represents ${pluralizeCount(calculatedTrainingGroupHours(group), "hour")} per group and ${pluralizeCount(calculatedTrainingGroupSetHours(group), "billable hour")} in total for ${pluralizeCount(expectedParticipants, "expected participant")}. ${capacityText}${service.schedulePreferenceScope === "by-learner-or-group" ? groupSchedulePreferenceText(group) : ""}`;
+          return `${group.language} part-time group training for ${pluralizeCount(groupCount, "group")} in the ${group.groupSession.toLowerCase()} session. The planned service period is ${formatProposalDateRange(group.trainingStartDate, trainingGroupEndDate(group))}. Teaching is planned for ${weekLabel(numericValue(group.teachingWeeks))} with ${weekLabel(numericValue(group.bufferWeeks))} of scheduling buffer, delivered by ${group.deliveryMode} at ${clientFacingGroupSchedule(group)}. This represents ${pluralizeCount(calculatedTrainingGroupHours(group), "hour")} per group and ${pluralizeCount(calculatedTrainingGroupSetHours(group), "billable hour")} in total for ${pluralizeCount(expectedParticipants, "expected participant")}. ${capacityText}${service.schedulePreferenceScope === "by-learner-or-group" ? groupSchedulePreferenceText(group) : ""}`;
         })
         .join(" ") + (service.schedulePreferenceScope === "whole-service" ? serviceSchedulePreferenceText(service) : "");
     }
@@ -1440,10 +1542,7 @@ function proposalTrainingDetailText(service: RequestedService, priceLine?: DemoP
       reserveHours > 0
         ? ` An additional ${pluralizeCount(reserveHours, "reserve hour")} per learner is included for individual training contingencies, for a total of ${pluralizeCount(quotedTrainingHours(service), "billable hour")}.`
         : "";
-    const learnerText =
-      service.classType === "Individual" && individualLearners > 1
-        ? ` for ${pluralizeCount(individualLearners, "learner")}`
-        : "";
+    const learnerText = individualLearnerPhrase(service);
     const scheduledText =
       service.classType === "Individual"
         ? `${pluralizeCount(scheduledHours, "scheduled hour")} per learner`
@@ -1453,7 +1552,7 @@ function proposalTrainingDetailText(service: RequestedService, priceLine?: DemoP
         ? `, representing ${pluralizeCount(quotedTrainingHours(service), "billable hour")} in total`
         : "";
 
-    return `${languageText} ${service.classType.toLowerCase()} ${service.trainingFormat.toLowerCase()} training${learnerText} delivered by ${service.deliveryMode}. The schedule is planned for ${durationWeeksLabel(service)} at ${clientFacingTrainingSchedule(service)}, for ${scheduledText}${totalText}.${reserveText}${learnerSchedulePreferenceText(service)}`;
+    return `${languageText} ${service.classType.toLowerCase()} ${service.trainingFormat.toLowerCase()} training${learnerText} delivered by ${service.deliveryMode}. The planned service period is ${formatProposalDateRange(service.trainingStartDate, service.trainingEndDate)}. The schedule is planned for ${durationWeeksLabel(service)} at ${clientFacingTrainingSchedule(service)}, for ${scheduledText}${totalText}.${reserveText}${individualLearnerDetailSentence(service)}${learnerSchedulePreferenceText(service)}`;
   }
 
   if (service.assessmentGroups.length > 0) {
@@ -1462,10 +1561,68 @@ function proposalTrainingDetailText(service: RequestedService, priceLine?: DemoP
       return `${pluralizeCount(numericValue(group.candidates), "candidate")} in ${group.language} for ${competencies}`;
     });
 
-    return `${service.family} configured for ${joinReadable(groupText)}. Pricing is based on the selected Price Book unit and the competencies included for each candidate group.`;
+    return `${service.family} configured for ${joinReadable(groupText)}. Assessment timing: To be confirmed with the client. Pricing is based on the selected Price Book unit and the competencies included for each candidate group.`;
   }
 
-  return `${service.family} configured for ${pluralizeCount(assessmentCandidateCount(service), "candidate")} and ${joinReadable(service.competencies)}.`;
+  return `${service.family} configured for ${pluralizeCount(assessmentCandidateCount(service), "candidate")} and ${joinReadable(service.competencies)}. Assessment timing: To be confirmed with the client.`;
+}
+
+function proposalServiceFacts(service: RequestedService, priceLine?: DemoPriceBookEntry) {
+  if (service.family === "Second language training") {
+    if (usesGroupProgramModel(service)) {
+      const groupCount = totalGroupCount(service);
+      const expectedParticipants = totalGroupParticipantsForPriceLine(service, priceLine);
+      const languages = joinReadable(Array.from(new Set(service.trainingGroups.map((group) => group.language))));
+      const periods = service.trainingGroups.map((group, index) => {
+        const prefix = service.trainingGroups.length > 1 ? `Set ${index + 1}: ` : "";
+        return `${prefix}${formatProposalDateRange(group.trainingStartDate, trainingGroupEndDate(group))}`;
+      });
+      const schedules = service.trainingGroups.map((group, index) => {
+        const prefix = service.trainingGroups.length > 1 ? `Set ${index + 1}: ` : "";
+        return `${prefix}${clientFacingGroupSchedule(group)}`;
+      });
+
+      return [
+        { label: "Service period", value: periods.join("; ") },
+        { label: "Language", value: languages },
+        { label: "Training format", value: `${service.classType} / ${service.trainingFormat}` },
+        { label: "Schedule", value: schedules.join("; ") },
+        { label: "Participants", value: `${pluralizeCount(groupCount, "group")} / ${pluralizeCount(expectedParticipants, "expected participant")}` },
+        { label: "Billable hours", value: pluralizeCount(quotedTrainingHours(service), "hour") },
+      ];
+    }
+
+    const learnerCount = service.classType === "Individual" ? positiveIntegerValue(service.participants) : optionalParticipantValue(service.participants);
+
+    const facts = [
+      { label: "Service period", value: formatProposalDateRange(service.trainingStartDate, service.trainingEndDate) },
+      { label: "Language", value: joinReadable(service.targetLanguages) },
+      { label: "Training format", value: `${service.classType} / ${service.trainingFormat}` },
+      { label: "Schedule", value: clientFacingTrainingSchedule(service) },
+      { label: "Participants", value: service.classType === "Individual" ? individualLearnerFactValue(service) : learnerCount > 0 ? pluralizeCount(learnerCount, "learner") : "To be confirmed with the client" },
+      { label: "Billable hours", value: pluralizeCount(quotedTrainingHours(service), "hour") },
+    ];
+
+    if (service.classType === "Individual" && positiveIntegerValue(service.participants) > 1 && trimmedLearnerName(service)) {
+      facts.splice(5, 0, { label: "Learner notes", value: trimmedLearnerName(service) });
+    }
+
+    return facts;
+  }
+
+  const competencies = service.assessmentGroups.length > 0
+    ? joinReadable(Array.from(new Set(service.assessmentGroups.flatMap((group) => group.competencies))))
+    : joinReadable(service.competencies);
+  const languages = service.assessmentGroups.length > 0
+    ? joinReadable(Array.from(new Set(service.assessmentGroups.map((group) => group.language))))
+    : "English and/or French";
+
+  return [
+    { label: "Assessment timing", value: "To be confirmed with the client" },
+    { label: "Language", value: languages },
+    { label: "Candidates", value: pluralizeCount(assessmentCandidateCount(service), "candidate") },
+    { label: "Competencies", value: competencies || "To be confirmed with the client" },
+  ];
 }
 
 function quotationDescriptionText(service: RequestedService, priceLine?: DemoPriceBookEntry) {
@@ -1479,11 +1636,8 @@ function quotationDescriptionText(service: RequestedService, priceLine?: DemoPri
       return `${languages} group training, ${deliveryModes}, ${pluralizeCount(groupCount, "group")}, ${pluralizeCount(expectedParticipants, "expected participant")}.`;
     }
 
-    const learnerText =
-      service.classType === "Individual"
-        ? `, ${pluralizeCount(positiveIntegerValue(service.participants), "learner")}`
-        : "";
-    return `${joinReadable(service.targetLanguages)} ${service.classType.toLowerCase()} ${service.trainingFormat.toLowerCase()} training, ${service.deliveryMode}${learnerText}.`;
+    const learnerText = individualQuotationLearnerPhrase(service);
+    return `${joinReadable(service.targetLanguages)} ${service.classType.toLowerCase()} ${service.trainingFormat.toLowerCase()} training${learnerText}, ${service.deliveryMode}.`;
   }
 
   if (service.assessmentGroups.length > 0) {
@@ -1591,6 +1745,27 @@ function quoteSummaryTrainingText(services: RequestedService[]) {
   return `${trainingServices.length} training service${trainingServices.length === 1 ? "" : "s"} / ${displayHourValue(hours)} hours`;
 }
 
+function serviceShortcutLabel(service: RequestedService, index: number) {
+  const prefix = `Service ${index + 1}`;
+
+  if (service.family === "Second language training") {
+    if (usesGroupProgramModel(service)) {
+      const languages = joinReadable(Array.from(new Set(service.trainingGroups.map((group) => group.language))));
+      return `${prefix}: Training - ${languages} - ${pluralizeCount(totalGroupCount(service), "group")} - ${displayHourValue(quotedTrainingHours(service))} h`;
+    }
+
+    const language = joinReadable(service.targetLanguages);
+    const participantLabel =
+      service.classType === "Individual"
+        ? pluralizeCount(positiveIntegerValue(service.participants), "learner")
+        : participantSummary(service);
+    return `${prefix}: Training - ${language} - ${service.classType} - ${participantLabel}`;
+  }
+
+  const candidates = assessmentCandidateCount(service);
+  return `${prefix}: ${service.family} - ${pluralizeCount(candidates, "candidate")}`;
+}
+
 interface ProposalEditorPageProps {
   mode: "new" | "edit";
   proposalId?: string;
@@ -1658,6 +1833,13 @@ function addRequestedService() {
       ...requestedServices,
       nextService,
     ]);
+  }
+
+  function addServiceAndGoToTraining() {
+    if (activeStepId !== "training-phases") {
+      setActiveStepId("training-phases");
+    }
+    addRequestedService();
   }
 
   function updateRequestedService(serviceId: string, updates: Partial<RequestedService>) {
@@ -1754,6 +1936,16 @@ function addRequestedService() {
             Back
           </button>
           <div>
+            {activeStepId === "training-phases" && (
+              <button
+                aria-label="Add service from bottom action bar"
+                className="button-secondary"
+                onClick={addServiceAndGoToTraining}
+                type="button"
+              >
+                Add service
+              </button>
+            )}
             <button className="button-secondary" onClick={() => onPrototypeAction("Save draft")} type="button">
               Save draft
             </button>
@@ -1941,10 +2133,11 @@ function ServicesTrainingStep({
               {requestedServices.map((service, index) => (
                 <button
                   key={service.id}
+                  aria-label={`Jump to ${serviceShortcutLabel(service, index)}`}
                   onClick={() => focusService(service.id)}
                   type="button"
                 >
-                  Service {index + 1}: {service.family}
+                  {serviceShortcutLabel(service, index)}
                 </button>
               ))}
             </div>
@@ -2288,6 +2481,20 @@ function ServiceBuilderCard({
                   inputMode="numeric"
                   value={service.participants}
                   onChange={(event) => onUpdate({ participants: event.target.value })}
+                />
+              </label>
+            )}
+            {shouldShowIndividualLearnersField(service) && (
+              <label>
+                {positiveIntegerValue(service.participants) > 1 ? "Learner names or notes" : "Learner name"}
+                <input
+                  placeholder={
+                    positiveIntegerValue(service.participants) > 1
+                      ? "Optional, list names or paste client notes"
+                      : "Optional, for example: Arezoo Matin"
+                  }
+                  value={service.learnerName}
+                  onChange={(event) => onUpdate({ learnerName: event.target.value })}
                 />
               </label>
             )}
@@ -3005,6 +3212,7 @@ function proposalPreviewRows(requestedServices: RequestedService[]) {
       amount: amountMinorUnits === null ? "Rate to confirm" : formatCadMinorUnitsForProposal(amountMinorUnits),
       configuration: proposalTrainingDetailText(service, selectedPriceLine),
       description: quotationDescriptionText(service, selectedPriceLine),
+      facts: proposalServiceFacts(service, selectedPriceLine),
       id: service.id,
       label: `Service ${index + 1}`,
       quantity: billingQuantityLabel(service, selectedPriceLine),
@@ -3088,6 +3296,27 @@ function LetterFooter({ pageNumber, totalPages }: { pageNumber: number; totalPag
       <span>{proposalFooterCompany} &copy;2026 {proposalFooterAddress}</span>
       <span className="letter-footer-page">Page {pageNumber} of {totalPages}</span>
     </footer>
+  );
+}
+
+function LetterLogo({ assetBaseUrl }: { assetBaseUrl: string }) {
+  const normalizedBaseUrl = assetBaseUrl.endsWith("/") ? assetBaseUrl : `${assetBaseUrl}/`;
+  const sources = [
+    `${normalizedBaseUrl}kc-logo-horizontal.png`,
+    "/quote-manager-kc/kc-logo-horizontal.png",
+    "/kc-logo-horizontal.png",
+  ];
+  const [sourceIndex, setSourceIndex] = useState(0);
+
+  return (
+    <img
+      alt="Knowledge Circle"
+      className="letter-logo"
+      onError={() => {
+        setSourceIndex((currentIndex) => Math.min(currentIndex + 1, sources.length - 1));
+      }}
+      src={sources[sourceIndex]}
+    />
   );
 }
 
@@ -3182,10 +3411,18 @@ function LetterTrainingDetailsSection({
         <div className="letter-service-cards">
           {rows.map((row) => (
             <article className="letter-service-card" key={row.id}>
-              <div>
+              <div className="letter-service-card-header">
                 <span className="letter-service-kicker">{row.label}</span>
-                <strong>{row.serviceName}</strong>
+                <strong className="letter-service-title">{row.serviceName}</strong>
               </div>
+              <dl className="letter-service-facts" aria-label={`${row.label} key details`}>
+                {row.facts.map((fact) => (
+                  <div key={`${row.id}-${fact.label}`}>
+                    <dt>{fact.label}</dt>
+                    <dd>{fact.value}</dd>
+                  </div>
+                ))}
+              </dl>
               <p>{row.configuration}</p>
             </article>
           ))}
@@ -3313,7 +3550,7 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
             <div className="letter-page-content">
               <header className="letter-header">
                 <div className="letter-brand-row">
-                  <img alt="Knowledge Circle" className="letter-logo" src={`${assetBaseUrl}kc-logo-horizontal.png`} />
+                  <LetterLogo assetBaseUrl={assetBaseUrl} />
                   <div className="letter-reference-card">
                     <span>Proposal reference</span>
                     <strong>{quoteId}</strong>
@@ -3464,6 +3701,24 @@ function ProposalPreviewDialog({ canGeneratePdf, onClose, quoteDate, quoteId, re
               <section className="letter-section">
                 <LetterSectionHeading eyebrow="Next step" icon="acceptance" title="Acceptance" />
                 <p>To proceed, please provide a valid Call-Up, purchase order, signed authorization, or written approval from an authorized representative.</p>
+                <div className="letter-signature-block" aria-label="Client acceptance signature block">
+                  <div>
+                    <span>Authorized representative name</span>
+                    <strong aria-hidden="true">&nbsp;</strong>
+                  </div>
+                  <div>
+                    <span>Title</span>
+                    <strong aria-hidden="true">&nbsp;</strong>
+                  </div>
+                  <div>
+                    <span>Signature</span>
+                    <strong aria-hidden="true">&nbsp;</strong>
+                  </div>
+                  <div>
+                    <span>Date</span>
+                    <strong aria-hidden="true">&nbsp;</strong>
+                  </div>
+                </div>
               </section>
             </div>
             <LetterFooter pageNumber={adminPageNumber} totalPages={proposalPageCount} />

@@ -2792,6 +2792,36 @@ td strong {
   line-height: 1.45;
 }
 
+.letter-signature-block {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem 1rem;
+  margin-top: 1.25rem;
+  border: 1px solid #dfe8ef;
+  border-radius: 8px;
+  padding: 0.85rem 0.9rem;
+  background: #fbfdff;
+}
+
+.letter-signature-block div {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.letter-signature-block span {
+  color: #657484;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.letter-signature-block strong {
+  display: block;
+  min-height: 1.45rem;
+  border-bottom: 1px solid #9fb0c0;
+}
+
 .letter-service-cards {
   display: grid;
   gap: 0.65rem;
@@ -2799,31 +2829,68 @@ td strong {
 
 .letter-service-card {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.5rem;
   border: 1px solid #dfe8ef;
-  border-left: 4px solid #c9d8e6;
+  border-left: 4px solid #9fb7ce;
   border-radius: 8px;
-  padding: 0.7rem 0.8rem;
+  padding: 0.75rem 0.85rem;
   background: #fbfdff;
 }
 
-.letter-service-card strong,
+.letter-service-card-header {
+  display: grid;
+  gap: 0.14rem;
+  border-bottom: 1px solid #e4ebf2;
+  padding-bottom: 0.5rem;
+}
+
 .letter-service-kicker {
   display: block;
 }
 
 .letter-service-kicker {
-  margin-bottom: 0.1rem;
-  color: var(--kc-muted);
-  font-size: 0.68rem;
+  color: #657484;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.letter-service-card strong {
+.letter-service-title {
   color: var(--kc-navy-900);
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1.25;
+}
+
+.letter-service-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem 0.7rem;
+  margin: 0.05rem 0 0.15rem;
+  padding: 0.2rem 0 0;
+}
+
+.letter-service-facts div {
+  min-width: 0;
+  border-top: 1px solid #edf2f6;
+  padding-top: 0.32rem;
+}
+
+.letter-service-facts dt {
+  color: #6c7885;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.letter-service-facts dd {
+  margin: 0.1rem 0 0;
+  color: var(--kc-navy-900);
+  font-size: 0.77rem;
+  font-weight: 650;
+  line-height: 1.35;
 }
 
 .letter-service-card p {

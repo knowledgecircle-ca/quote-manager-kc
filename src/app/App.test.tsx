@@ -191,6 +191,9 @@ describe("App Phase 2A prototype", () => {
     expect(within(dialog).getByText("What follows")).toBeInTheDocument();
     expect(within(dialog).getByText(/is pleased to provide this proposal/i)).toBeInTheDocument();
     expect(within(dialog).getAllByText(/French part-time group training for 1 group/i).length).toBeGreaterThan(0);
+    expect(within(dialog).getByText("Service period")).toBeInTheDocument();
+    expect(within(dialog).getByText("July 6, 2026 to October 4, 2026")).toBeInTheDocument();
+    expect(within(dialog).getByText("Billable hours")).toBeInTheDocument();
     expect(within(dialog).queryByText(/This proposal text will be assembled/i)).not.toBeInTheDocument();
     expect(within(dialog).queryByText("Rate source")).not.toBeInTheDocument();
     expect(within(dialog).getByRole("columnheader", { name: "Item" })).toBeInTheDocument();
@@ -218,6 +221,20 @@ describe("App Phase 2A prototype", () => {
     expect(within(dialog).getByText("Page 4 of 4")).toBeInTheDocument();
     expect(within(dialog).getAllByText("Total")).toHaveLength(2);
     expect(within(dialog).queryByText("Estimated subtotal")).not.toBeInTheDocument();
+  });
+
+  it("shows assessment timing as client confirmation when no exact date is set", () => {
+    render(<App />);
+
+    openTrainingStep();
+    addDiagnosticAssessmentService();
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
+    expect(within(dialog).getByText("Assessment timing")).toBeInTheDocument();
+    expect(within(dialog).getAllByText("To be confirmed with the client").length).toBeGreaterThan(0);
+    expect(within(dialog).getByText(/Assessment timing: To be confirmed with the client/i)).toBeInTheDocument();
   });
 
   it("shows four proposal steps with aria-current on the active step", () => {
@@ -581,6 +598,61 @@ describe("App Phase 2A prototype", () => {
     ).toBeInTheDocument();
   });
 
+  it("personalizes individual training details when a learner name is provided", () => {
+    render(<App />);
+
+    openTrainingStep();
+
+    const languageTrainingService = addLanguageTrainingService();
+    fireEvent.change(within(languageTrainingService).getByLabelText("Class type"), {
+      target: { value: "Individual" },
+    });
+    fireEvent.change(within(languageTrainingService).getByLabelText("Learner name"), {
+      target: { value: "Arezoo Matin" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    const previewDialog = screen.getByRole("dialog", { name: "Proposal Preview" });
+
+    expect(
+      within(previewDialog).getByText(/French individual part-time training for Arezoo Matin delivered by MS Teams\./),
+    ).toBeInTheDocument();
+    expect(within(previewDialog).getByText("Arezoo Matin")).toBeInTheDocument();
+    expect(
+      within(previewDialog).getByText("French individual part-time training for Arezoo Matin, MS Teams."),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps individual learner notes separate when multiple learners are entered", () => {
+    render(<App />);
+
+    openTrainingStep();
+
+    const languageTrainingService = addLanguageTrainingService();
+    fireEvent.change(within(languageTrainingService).getByLabelText("Class type"), {
+      target: { value: "Individual" },
+    });
+    fireEvent.change(within(languageTrainingService).getByLabelText("Training format"), {
+      target: { value: "Full-time" },
+    });
+    fireEvent.change(within(languageTrainingService).getByLabelText("Individual learners"), {
+      target: { value: "3" },
+    });
+    fireEvent.change(within(languageTrainingService).getByLabelText("Learner names or notes"), {
+      target: { value: "Michael Jackson" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    const previewDialog = screen.getByRole("dialog", { name: "Proposal Preview" });
+
+    expect(
+      within(previewDialog).getByText(/French individual full-time training for 3 learners delivered by MS Teams\./),
+    ).toBeInTheDocument();
+    expect(within(previewDialog).queryByText(/training for Michael Jackson delivered/i)).not.toBeInTheDocument();
+    expect(within(previewDialog).getByText("Learner notes")).toBeInTheDocument();
+    expect(within(previewDialog).getByText(/Learner names or notes provided: Michael Jackson\./)).toBeInTheDocument();
+  });
+
   it("builds proposals from requested service blocks with automatic Price Book rates", () => {
     render(<App />);
 
@@ -618,11 +690,23 @@ describe("App Phase 2A prototype", () => {
     addDiagnosticAssessmentService();
 
     const shortcuts = screen.getByRole("navigation", { name: "Requested service shortcuts" });
-    expect(within(shortcuts).getByRole("button", { name: "Service 1: Second language training" })).toBeInTheDocument();
-    expect(within(shortcuts).getByRole("button", { name: "Service 2: Diagnostic assessment" })).toBeInTheDocument();
+    expect(within(shortcuts).getByRole("button", { name: "Jump to Service 1: Training - French - 1 group - 36 h" })).toBeInTheDocument();
+    expect(within(shortcuts).getByRole("button", { name: "Jump to Service 2: Diagnostic assessment - 1 candidate" })).toBeInTheDocument();
 
-    fireEvent.click(within(shortcuts).getByRole("button", { name: "Service 1: Second language training" }));
+    fireEvent.click(within(shortcuts).getByRole("button", { name: "Jump to Service 1: Training - French - 1 group - 36 h" }));
     expect(languageTrainingService).toHaveFocus();
+  });
+
+  it("adds another service from the bottom training action bar", () => {
+    render(<App />);
+
+    openTrainingStep();
+
+    addLanguageTrainingService();
+    fireEvent.click(screen.getByRole("button", { name: "Add service from bottom action bar" }));
+
+    expect(screen.getByRole("article", { name: "Diagnostic assessment" })).toHaveFocus();
+    expect(screen.getByRole("navigation", { name: "Requested service shortcuts" })).toBeInTheDocument();
   });
 
   it("allows proposal-specific rate overrides for Non-SOA services only", () => {
@@ -889,6 +973,11 @@ describe("App Phase 2A prototype", () => {
     expect(screen.getByText(/preferences are considered for planning/i)).toBeInTheDocument();
     expect(screen.getByText(/Tuesday and Thursday mornings/i)).toBeInTheDocument();
     expect(screen.getByText(/This proposal is valid for 30 days/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    const dialog = screen.getByRole("dialog", { name: "Proposal Preview" });
+    expect(within(dialog).getByText("Authorized representative name")).toBeInTheDocument();
+    expect(within(dialog).getByText("Signature")).toBeInTheDocument();
+    expect(within(dialog).getByText("Date")).toBeInTheDocument();
     expect(screen.queryByText(/Cancellation, absence, tax, and contract precedence clauses/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Editable content")).not.toBeInTheDocument();
     expect(screen.queryByText("Letter Proposal Preview")).not.toBeInTheDocument();
